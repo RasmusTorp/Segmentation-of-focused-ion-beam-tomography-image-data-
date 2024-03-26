@@ -1,0 +1,21 @@
+hyper:
+  lr: 0.001
+  epochs: 10
+  batch_size: 32
+  hidden_dim: 128
+constants:
+  seed: 42
+  patience: 5
+  input_dim: 784
+  output_dim: 10
+  data_path: "data/"
+wandb:
+  project: "testing"
+  entity: "rasmustorp-ai"
+bsub:
+  queue: "gpua100"
+  name: "mnist"
+  gpu_num: 1
+  cpu_num: 4
+  cpu_mem: 4
+
