@@ -1,3 +1,9 @@
 /data
 .DS_Store
 .ionbeam
+secret.txt
+*.png
+/wandb
+*.yaml
+*.pth
+*.log
