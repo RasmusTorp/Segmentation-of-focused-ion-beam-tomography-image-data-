@@ -8,68 +8,129 @@ from utils import get_device
 from evaluation import evaluate_model
 import numpy as np
 
+# Solution partly inspired by https://github.com/ptrblck/pytorch_misc/blob/master/unet_demo.py and github copilot as well as original U-Net paper
 class DoubleConv(nn.Module):
-    def __init__(self, in_channels, out_channels):
+    def __init__(self, in_channels, out_channels, kernel_size, padding, stride):
         super().__init__()
         self.double_conv = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
+            nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, padding=padding, stride=stride),
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
-            nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
+            nn.Conv2d(out_channels, out_channels, kernel_size=kernel_size, padding=padding, stride=stride),
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True)
         )
 
     def forward(self, x):
         return self.double_conv(x)
+    
+class DownStep(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, padding,
+                stride):
+        super(DownStep, self).__init__()
 
+        self.pool = nn.MaxPool2d(kernel_size=2)
+        self.conv = DoubleConv(in_channels, out_channels, kernel_size,
+                                padding, stride)
+
+    def forward(self, x):
+        x = self.pool(x)
+        x = self.conv(x)
+        return x
+    
+class UpStep(nn.Module):
+    def __init__(self, in_channels, in_channels_skip, out_channels,
+                kernel_size, padding, stride):
+        super(UpStep, self).__init__()
+
+        self.conv_trans = nn.ConvTranspose2d(
+            in_channels, in_channels, kernel_size=2, padding=0, stride=2)
+        
+        self.conv_block = DoubleConv(
+            in_channels=in_channels + in_channels_skip,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            padding=padding,
+            stride=stride)
+
+    def forward(self, x, x_skip):
+        x = self.conv_trans(x)
+        x = torch.cat((x, x_skip), dim=1)
+        x = self.conv_block(x)
+        return x
+    
 class UNet2D(nn.Module):
-    def __init__(self, n_neurons, n_channels, n_classes, padding=False):
+    def __init__(self, n_neurons, n_channels, n_classes, n_depth = 3, kernel_size = 3, 
+                padding = 1, stride = 1,with_skip_connections=True):
         super().__init__()
-        self.encoder = nn.Sequential(
-            DoubleConv(n_channels, n_neurons),
-            nn.MaxPool2d(kernel_size=2),
-            DoubleConv(n_neurons, n_neurons * 2),
-            nn.MaxPool2d(kernel_size=2),
-            DoubleConv(n_neurons * 2, n_neurons * 4),
-            nn.MaxPool2d(kernel_size=2),
-        )
+        
+        self.with_skip_connections = with_skip_connections
+        
+        if with_skip_connections:
+            self.encoder = nn.ModuleList()
+            self.decoder = nn.ModuleList()
+            
+            first_conv = DoubleConv(n_channels, n_neurons, kernel_size=kernel_size, padding=padding, stride=stride)
+            
+            self.encoder.append(first_conv)
+            for i in range(n_depth):
+                self.encoder.append(DownStep(n_neurons * 2**i, n_neurons * 2**(i+1), kernel_size=kernel_size, padding=padding, stride=stride))
+                
+            for i in reversed(range(n_depth)):
+                self.decoder.append(UpStep(n_neurons * 2**(i+1), n_neurons * 2**i, n_neurons * 2**i, kernel_size=kernel_size, padding=padding, stride=stride))
+                
+                
+        else:
+            self.encoder = nn.Sequential(
+                DoubleConv(n_channels, n_neurons, kernel_size=kernel_size, padding=padding, stride=stride),
+                nn.MaxPool2d(kernel_size=2),
+                DoubleConv(n_neurons, n_neurons * 2, kernel_size=kernel_size, padding=padding, stride=stride),
+                nn.MaxPool2d(kernel_size=2),
+                DoubleConv(n_neurons * 2, n_neurons * 4, kernel_size=kernel_size, padding=padding, stride=stride),
+                nn.MaxPool2d(kernel_size=2),
+            )
 
-        self.decoder = nn.Sequential(
-            DoubleConv(n_neurons * 4, n_neurons * 2),
-            nn.ConvTranspose2d(n_neurons * 2, n_neurons * 2, kernel_size=2, stride=2),
-            DoubleConv(n_neurons * 2, n_neurons),
-            nn.ConvTranspose2d(n_neurons, n_neurons, kernel_size=2, stride=2),
-            DoubleConv(n_neurons, n_neurons),
-            nn.ConvTranspose2d(n_neurons, n_neurons, kernel_size=2, stride=2),
-            DoubleConv(n_neurons, n_classes),
-        )
+            self.decoder = nn.Sequential(
+                DoubleConv(n_neurons * 4, n_neurons * 2, kernel_size=kernel_size, padding=padding, stride=stride),
+                nn.ConvTranspose2d(n_neurons * 2, n_neurons * 2, kernel_size=2, stride=2),
+                DoubleConv(n_neurons * 2, n_neurons, kernel_size=kernel_size, padding=padding, stride=stride),
+                nn.ConvTranspose2d(n_neurons, n_neurons, kernel_size=2, stride=2),
+                DoubleConv(n_neurons, n_neurons, kernel_size=kernel_size, padding=padding, stride=stride),
+                nn.ConvTranspose2d(n_neurons, n_neurons, kernel_size=2, stride=2),
+                DoubleConv(n_neurons, n_classes, kernel_size=kernel_size, padding=padding, stride=stride),
+            )
+        
         self.n_classes = n_classes
-        self.padding = padding
         self.criterion = None
 
         self.optimizer = None
         self.device = get_device()
 
-        self.final_conv = nn.Conv2d(in_channels=self.n_classes, out_channels=self.n_classes, kernel_size=1)
+        self.final_conv = nn.Conv2d(in_channels=n_neurons, out_channels=self.n_classes, kernel_size=1)
 
     def forward(self, x):
-        # Pad the input to a size divisible by 8
-        if self.padding:
-            _, _, h, w = x.shape
-            pad_h = (h + 7) // 8 * 8 - h
-            pad_w = (w + 7) // 8 * 8 - w
-            x = F.pad(x, (0, pad_w, 0, pad_h))
+        
+        if not self.with_skip_connections:
+            x = self.encoder(x)
+            x = self.decoder(x)
+            x = self.final_conv(x)
 
-        x = self.encoder(x)
-        x = self.decoder(x)
-        x = self.final_conv(x)
-
-        if self.padding:
-            x = x[:, :, :h, :w]
+        else:
+            encoder_outs = []
+            
+            for layer in self.encoder:
+                x = layer(x)
+                encoder_outs.append(x)
+                
+            for i, layer in enumerate(self.decoder):
+                x = layer(x, encoder_outs[-i-2])
+                
+            x = self.final_conv(x)
+            
         return x
     
     def to_segmentation(self, x):
+        x = self.forward(x)
         return x.argmax(dim=1)
 
     def train_model(self, train_loader, test_loader = None, optimizer = "adam", lr = 0.001
@@ -149,24 +210,35 @@ class UNet2D(nn.Module):
 
                 pixel_accuracy, mean_iou = evaluate_model(output, target, return_values=True, print_values=False)
                 print(f'Pixel accuracy: {pixel_accuracy.item()}, Mean IoU: {mean_iou.item()}')
+                
+    def save_model(self, file_path):
+        torch.save(self.state_dict(), file_path)
+        
+    def load_model(self, file_path):
+        self.load_state_dict(torch.load(file_path))
     
 
 if __name__ == "__main__":
-    BATCH_SIZE = 30
+    BATCH_SIZE = 15
     TRAIN_SIZE = 0.8
     SQUARE_SIZE = 256
-    EPOCHS = 15
+    EPOCHS = 11
     N_NEURONS = 64
     LEARNING_RATE = 0.001
     PATIENCE = 5
+    N_DEPTH = 3
 
     IN_MEMORY = False
     STATIC_TEST = True
+    WITH_SKIP_CONNECTIONS = True
+    
     train_loader, test_loader = get_dataloaders(batch_size=BATCH_SIZE, train_size=TRAIN_SIZE, square_size=SQUARE_SIZE, in_memory=IN_MEMORY, static_test=STATIC_TEST)
 
     model = UNet2D(n_neurons=N_NEURONS,
                     n_channels=2,
-                    n_classes=3)
+                    n_classes=3,
+                    n_depth=N_DEPTH,
+                    with_skip_connections=WITH_SKIP_CONNECTIONS)
     
     # model.train_model(train_loader = train_loader, test_loader = test_loader, epochs=EPOCHS, lr=LEARNING_RATE)
     model.train_model(train_loader = train_loader, test_loader=test_loader, epochs=EPOCHS, lr=LEARNING_RATE, patience=PATIENCE)
