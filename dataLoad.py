@@ -9,9 +9,7 @@ from torchvision.transforms import Normalize
 
 from PIL import Image
 class CustomDataset(Dataset):
-    def __init__(self, train_size = None, test_size = None, square_size = None, random_sampling = False, normalize = True):
-        folder_path = "data/11t51center"
-
+    def __init__(self, train_size = None, test_size = None, square_size = None, random_sampling = False, normalize = True, folder_path = "data/11t51center"):
         self.labels_filepath = folder_path + "/Segmented"
         self.X_1_filepath = folder_path + "/Slicefront_corrected/Detector1"
         self.X_2_filepath = folder_path + "/Slicefront_corrected/Detector2"
@@ -129,7 +127,7 @@ class InMemoryDataset(Dataset):
             
         return self.X[idx], self.y[idx]
 
-def data_load_numpy(verbose:bool = True, processing = False, square_size = None):
+def data_load_numpy(verbose:bool = True, processing = False, square_size = None, folder_path = "data/11t51center"):
     """
     Load and process image data from the specified folder path using numpy arrays.
     
@@ -140,8 +138,6 @@ def data_load_numpy(verbose:bool = True, processing = False, square_size = None)
     Returns:
         tuple: A tuple containing the image data (X) and corresponding labels.
     """
-
-    folder_path = "data/11t51center"
 
     labels_filepath = folder_path + "/Segmented"
     X_1_filepath = folder_path + "/Slicefront_corrected/Detector1"
@@ -197,7 +193,7 @@ def data_load_numpy(verbose:bool = True, processing = False, square_size = None)
 
     return X, labels
 
-def data_load_tensors(verbose:bool = True, processing:bool = True, one_hot:bool = False, map_lapels = True, square_size = None):
+def data_load_tensors(verbose:bool = True, processing:bool = True, one_hot:bool = False, map_lapels = True, square_size = None, folder_path = "data/11t51center"):
     """
     Load data into tensors and perform data processing.
 
@@ -209,7 +205,7 @@ def data_load_tensors(verbose:bool = True, processing:bool = True, one_hot:bool 
         torch.Tensor: The input data in tensor format.
         torch.Tensor: The corresponding labels in tensor format.
     """
-    X, y = data_load_numpy(verbose, processing, square_size=square_size)
+    X, y = data_load_numpy(verbose, processing, square_size=square_size, folder_path=folder_path)
 
     X, y = torch.tensor(X), torch.tensor(y)
 
@@ -230,11 +226,11 @@ def data_load_tensors(verbose:bool = True, processing:bool = True, one_hot:bool 
     X = X.float()
     return X, y 
 
-def get_dataloaders(batch_size:int=15, train_size:float = 0.8, seed:int = 42, verbose:bool = True, square_size = None, in_memory = False,static_test = False):
+def get_dataloaders(batch_size:int=15, train_size:float = 0.8, seed:int = 42, verbose:bool = True, square_size = None, in_memory = False,static_test = False, folder_path = "data/11t51center"):
 
     
     if in_memory:
-        X, y = data_load_tensors(verbose)
+        X, y = data_load_tensors(verbose, folder_path=folder_path)
         train_size = int(train_size * len(X))   
         X_train, y_train = X[:train_size], y[:train_size]
         X_test, y_test = X[train_size:], y[train_size:]
@@ -242,10 +238,10 @@ def get_dataloaders(batch_size:int=15, train_size:float = 0.8, seed:int = 42, ve
         test_dataset = InMemoryDataset(X_test, y_test, square_size=square_size, random_sampling = False)
 
     else:
-        train_dataset = CustomDataset(train_size = train_size, square_size=square_size, random_sampling = True)
+        train_dataset = CustomDataset(train_size = train_size, square_size=square_size, random_sampling = True, folder_path=folder_path)
 
         if static_test:
-            X, y = data_load_tensors(verbose)
+            X, y = data_load_tensors(verbose, folder_path=folder_path)
             train_size = int(train_size * len(X))   
             X_test, y_test = X[train_size:], y[train_size:]
             test_dataset = InMemoryDataset(X_test, y_test, square_size=square_size, random_sampling = False)
