@@ -1,11 +1,13 @@
 hyper:
   lr: 0.001
-  epochs: 5
+  epochs: 2
   batch_size: 30
   n_neurons: 64
   square_size: 256
   in_memory: False
   static_test: True
+  with_skip_connections: True
+  n_depth: 3
   patience: 5
   train_size: 0.8
 constants:
@@ -14,6 +16,7 @@ constants:
   n_channels: 2
   data_path: "data/"
 wandb:
+  track: False
   project: "ionbeam"
   entity: "rasmustorp-ai"
 bsub:
