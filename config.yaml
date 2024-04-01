@@ -1,6 +1,6 @@
 hyper:
   lr: 0.001
-  epochs: 2
+  epochs: 15
   batch_size: 30
   n_neurons: 64
   square_size: 256
