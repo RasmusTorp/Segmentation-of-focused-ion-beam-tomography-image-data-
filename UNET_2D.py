@@ -8,7 +8,7 @@ from utils import get_device
 from evaluation import evaluate_model
 import numpy as np
 
-# Solution partly inspired by https://github.com/ptrblck/pytorch_misc/blob/master/unet_demo.py and github copilot as well as original U-Net paper
+# Some parts partly inspired by https://github.com/ptrblck/pytorch_misc/blob/master/unet_demo.py and github copilot as well as original U-Net paper
 class DoubleConv(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, padding, stride):
         super().__init__()
@@ -134,7 +134,7 @@ class UNet2D(nn.Module):
         return x.argmax(dim=1)
 
     def train_model(self, train_loader, test_loader = None, optimizer = "adam", lr = 0.001
-                    ,criterion = "crossentropy", epochs = 10, verbose=2, patience=5):
+                    ,criterion = "crossentropy", epochs = 10, verbose=2, patience=5, save_as="best_model.pth"):
         
         self.to(self.device)
     
@@ -173,7 +173,7 @@ class UNet2D(nn.Module):
                 print(f'Validation loss: {val_loss}')
                 if val_loss < best_loss:
                     best_loss = val_loss
-                    torch.save(self.state_dict(), 'best_model.pth')
+                    self.save_model(save_as)
                     no_improve_epochs = 0
                 else:
                     no_improve_epochs += 1
@@ -211,11 +211,11 @@ class UNet2D(nn.Module):
                 pixel_accuracy, mean_iou = evaluate_model(output, target, return_values=True, print_values=False)
                 print(f'Pixel accuracy: {pixel_accuracy.item()}, Mean IoU: {mean_iou.item()}')
                 
-    def save_model(self, file_path):
-        torch.save(self.state_dict(), file_path)
+    def save_model(self, fileName):
+        torch.save(self.state_dict(), f"saved_models/{fileName}")
         
     def load_model(self, file_path):
-        self.load_state_dict(torch.load(file_path))
+        self.load_state_dict(torch.load(f"saved_models/{file_path}"))
     
 
 if __name__ == "__main__":
@@ -232,13 +232,16 @@ if __name__ == "__main__":
     STATIC_TEST = True
     WITH_SKIP_CONNECTIONS = True
     
+    save_as = "best_model.pth"
+    
     train_loader, test_loader = get_dataloaders(batch_size=BATCH_SIZE, train_size=TRAIN_SIZE, square_size=SQUARE_SIZE, in_memory=IN_MEMORY, static_test=STATIC_TEST)
 
     model = UNet2D(n_neurons=N_NEURONS,
                     n_channels=2,
                     n_classes=3,
                     n_depth=N_DEPTH,
-                    with_skip_connections=WITH_SKIP_CONNECTIONS)
+                    with_skip_connections=WITH_SKIP_CONNECTIONS,
+                    save_as=save_as)
     
     # model.train_model(train_loader = train_loader, test_loader = test_loader, epochs=EPOCHS, lr=LEARNING_RATE)
     model.train_model(train_loader = train_loader, test_loader=test_loader, epochs=EPOCHS, lr=LEARNING_RATE, patience=PATIENCE)
