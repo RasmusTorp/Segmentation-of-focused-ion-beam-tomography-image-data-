@@ -5,5 +5,4 @@ secret.txt
 *.png
 /wandb
 *.yaml
-*.pth
 *.log
