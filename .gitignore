@@ -6,3 +6,4 @@ secret.txt
 /wandb
 *.yaml
 *.log
+/saved_models
