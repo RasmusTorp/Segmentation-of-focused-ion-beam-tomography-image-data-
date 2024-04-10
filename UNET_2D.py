@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from utils import get_device
 from evaluation import evaluate_model
 import numpy as np
+import wandb
 
 # Some parts partly inspired by https://github.com/ptrblck/pytorch_misc/blob/master/unet_demo.py and github copilot as well as original U-Net paper
 class DoubleConv(nn.Module):
@@ -61,7 +62,7 @@ class UpStep(nn.Module):
     
 class UNet2D(nn.Module):
     def __init__(self, n_neurons, n_channels, n_classes, n_depth = 3, kernel_size = 3, 
-                padding = 1, stride = 1,with_skip_connections=True):
+                padding = 1, stride = 1, with_skip_connections=True, track=False):
         super().__init__()
         
         self.with_skip_connections = with_skip_connections
@@ -167,9 +168,11 @@ class UNet2D(nn.Module):
 
             if verbose:
                 print(f'Train Epoch: {epoch + 1}, Loss: {total_loss / loss_calculated}')
+                wandb.log({"train_loss": total_loss / loss_calculated})
 
             if test_loader:
                 val_loss = self.get_avg_loss(test_loader)
+                wandb.log({"val_loss": val_loss})
                 print(f'Validation loss: {val_loss}')
                 if val_loss < best_loss:
                     best_loss = val_loss
@@ -214,10 +217,13 @@ class UNet2D(nn.Module):
     def save_model(self, fileName):
         torch.save(self.state_dict(), f"saved_models/{fileName}")
         
-    def load_model(self, file_path):
-        self.load_state_dict(torch.load(f"saved_models/{file_path}"))
+    def load_model(self, file_path, map_location = None):
+        if map_location is None:
+            self.load_state_dict(torch.load(f"saved_models/{file_path}"))
+            
+        else:
+            self.load_state_dict(torch.load(f"saved_models/{file_path}"), map_location=map_location)
     
-
 if __name__ == "__main__":
     BATCH_SIZE = 15
     TRAIN_SIZE = 0.8
