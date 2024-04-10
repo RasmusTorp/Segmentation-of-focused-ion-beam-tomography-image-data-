@@ -8,21 +8,22 @@ hyper:
   patience: 5
 data:
   train_size: 0.8
-  in_memory: False
+  in_memory: True
   static_test: True
   square_size: 256
+  random_train_test_split: True
 constants:
   seed: 42
   n_classes: 3
   n_channels: 2
   data_path: "data/"
 wandb:
-  track: True
+  track: False
   project: "ionbeam"
   entity: "rasmustorp-ai"
 bsub:
   queue: "gpua100"
-  name: "mnist"
+  name: "ionbeam"
   gpu_num: 1
   cpu_num: 4
   cpu_mem: 4

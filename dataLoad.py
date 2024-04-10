@@ -2,14 +2,15 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
-from torch.utils.data.dataset import Dataset
+from torch.utils.data.dataset import Dataset, random_split, TensorDataset
 from torch.utils.data import DataLoader
+from sklearn.model_selection import train_test_split
 
 from torchvision.transforms import Normalize
 
 from PIL import Image
 class CustomDataset(Dataset):
-    def __init__(self, train_size = None, test_size = None, square_size = None, random_sampling = False, normalize = True, folder_path = "data/11t51center"):
+    def __init__(self, train_size = None, test_size = None, random_slicing = False, square_size = None, random_sampling = False, normalize = True, folder_path = "data/11t51center"):
         self.labels_filepath = folder_path + "/Segmented"
         self.X_1_filepath = folder_path + "/Slicefront_corrected/Detector1"
         self.X_2_filepath = folder_path + "/Slicefront_corrected/Detector2"
@@ -24,17 +25,22 @@ class CustomDataset(Dataset):
         self.square_size = square_size 
         self.random_sampling = random_sampling
 
-        if train_size:
-            self.X_1_filenames = self.X_1_filenames[:int(len(self.X_1_filenames) * train_size)]
-            self.X_2_filenames = self.X_2_filenames[:int(len(self.X_2_filenames) * train_size)]
-            self.labels_filenames = self.labels_filenames[:int(len(self.labels_filenames) * train_size)]
+        if not random_slicing:
+            if train_size:
+                self.X_1_filenames = self.X_1_filenames[:int(len(self.X_1_filenames) * train_size)]
+                self.X_2_filenames = self.X_2_filenames[:int(len(self.X_2_filenames) * train_size)]
+                self.labels_filenames = self.labels_filenames[:int(len(self.labels_filenames) * train_size)]
 
-        if test_size:
-            train_size = 1 - test_size
-            self.X_1_filenames = self.X_1_filenames[int(len(self.X_1_filenames) * train_size):]
-            self.X_2_filenames = self.X_2_filenames[int(len(self.X_2_filenames) * train_size):]
-            self.labels_filenames = self.labels_filenames[int(len(self.labels_filenames) * train_size):]
-
+            if test_size:
+                train_size = 1 - test_size
+                self.X_1_filenames = self.X_1_filenames[int(len(self.X_1_filenames) * train_size):]
+                self.X_2_filenames = self.X_2_filenames[int(len(self.X_2_filenames) * train_size):]
+                self.labels_filenames = self.labels_filenames[int(len(self.labels_filenames) * train_size):]
+                
+        #TODO: random test slicing
+        
+        
+        #TODO: Normalizing and other transforms in dataset
         if normalize:
             # Values calculated from the dataset
             self.normalize = Normalize(mean=[128.8504060979218, 91.33930754958642], std=[30.94350442869555, 27.551368693941175])
@@ -226,14 +232,36 @@ def data_load_tensors(verbose:bool = True, processing:bool = True, one_hot:bool 
     X = X.float()
     return X, y 
 
-def get_dataloaders(batch_size:int=15, train_size:float = 0.8, seed:int = 42, verbose:bool = True, square_size = None, in_memory = False,static_test = False, folder_path = "data/11t51center"):
+def get_dataloaders(batch_size:int=15, train_size:float = 0.8, seed:int = 42, verbose:bool = True, square_size = None, in_memory = False,static_test = False, random_train_test_split=True, folder_path = "data/11t51center"):
 
     
     if in_memory:
         X, y = data_load_tensors(verbose, folder_path=folder_path)
-        train_size = int(train_size * len(X))   
-        X_train, y_train = X[:train_size], y[:train_size]
-        X_test, y_test = X[train_size:], y[train_size:]
+        
+        
+        if random_train_test_split:
+            
+            # Split data into train and test sets
+            X_train, X_test, y_train, y_test = train_test_split(X.numpy(), y.numpy(), train_size=train_size, random_state=seed)
+
+            # Convert back to PyTorch tensors
+            X_train = torch.tensor(X_train)
+            y_train = torch.tensor(y_train)
+            X_test = torch.tensor(X_test)
+            y_test = torch.tensor(y_test)
+            # dataset = TensorDataset(X, y)
+            # train_size = round(0.8 * len(dataset))  # 80% train, 20% test
+            # test_size = len(dataset) - train_size
+            
+            # generator = torch.Generator().manual_seed(seed)
+            # train_dataset, test_dataset = random_split(dataset, [train_size, test_size], generator=generator)
+            # X_train, y_train = train_dataset.dataset.tensors
+            # X_test, y_test = test_dataset.dataset.tensors
+            
+        else:
+            train_size = int(train_size * len(X))   
+            X_train, y_train = X[:train_size], y[:train_size]
+            X_test, y_test = X[train_size:], y[train_size:]
         train_dataset = InMemoryDataset(X_train, y_train, square_size=square_size, random_sampling = True)
         test_dataset = InMemoryDataset(X_test, y_test, square_size=square_size, random_sampling = False)
 

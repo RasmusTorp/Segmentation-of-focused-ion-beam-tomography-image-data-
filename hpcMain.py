@@ -31,7 +31,8 @@ def main(config):
     
     train_loader, test_loader = get_dataloaders(batch_size=config.hyper.batch_size, train_size=config.data.train_size, 
                                                 square_size=config.data.square_size, in_memory=config.data.in_memory, 
-                                                static_test=config.data.static_test, folder_path=folder_path)
+                                                static_test=config.data.static_test, folder_path=folder_path,
+                                                random_train_test_split=config.data.random_train_test_split)
 
     model = UNet2D(n_neurons=config.hyper.n_neurons,
                     n_channels=config.constants.n_channels, 
