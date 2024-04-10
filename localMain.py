@@ -32,16 +32,14 @@ def main(config):
                                                 static_test=config.data.static_test)
 
     model = UNet2D(n_neurons=config.hyper.n_neurons,
-                    n_channels=config.constants.n_channels,
+                    n_channels=config.constants.n_channels, 
                     n_classes=config.constants.n_classes,
                     n_depth=config.hyper.n_depth,
-                    with_skip_connections=config.hyper.with_skip_connections,
-                    track=config.wandb.track)
+                    with_skip_connections=config.hyper.with_skip_connections)
     
     model.train_model(train_loader = train_loader, test_loader=test_loader, epochs=config.hyper.epochs, 
-                    lr=config.hyper.lr, patience=config.hyper.patience)
-    
-    # model.evaluate(test_loader)
+                    lr=config.hyper.lr, patience=config.hyper.patience,
+                    track = config.wandb.track)
     
     print("done")
     

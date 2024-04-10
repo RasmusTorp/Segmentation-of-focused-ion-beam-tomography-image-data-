@@ -62,7 +62,7 @@ class UpStep(nn.Module):
     
 class UNet2D(nn.Module):
     def __init__(self, n_neurons, n_channels, n_classes, n_depth = 3, kernel_size = 3, 
-                padding = 1, stride = 1, with_skip_connections=True, track=False):
+                padding = 1, stride = 1, with_skip_connections=True):
         super().__init__()
         
         self.with_skip_connections = with_skip_connections
@@ -135,7 +135,7 @@ class UNet2D(nn.Module):
         return x.argmax(dim=1)
 
     def train_model(self, train_loader, test_loader = None, optimizer = "adam", lr = 0.001
-                    ,criterion = "crossentropy", epochs = 10, verbose=2, patience=5, save_as="best_model.pth"):
+                    ,criterion = "crossentropy", epochs = 10, verbose=2, patience=5, save_as="best_model.pth", track = False):
         
         self.to(self.device)
     
@@ -168,11 +168,18 @@ class UNet2D(nn.Module):
 
             if verbose:
                 print(f'Train Epoch: {epoch + 1}, Loss: {total_loss / loss_calculated}')
+                
+            
+            if track:
                 wandb.log({"train_loss": total_loss / loss_calculated})
 
             if test_loader:
                 val_loss = self.get_avg_loss(test_loader)
-                wandb.log({"val_loss": val_loss})
+                
+                if track:
+                    wandb.log({"val_loss": val_loss})
+                    
+                    
                 print(f'Validation loss: {val_loss}')
                 if val_loss < best_loss:
                     best_loss = val_loss
@@ -203,6 +210,7 @@ class UNet2D(nn.Module):
         return avg_loss
 
 
+    #TODO: Fix evaluation function and put it in a separate file
     def evaluate(self, test_loader):
         self.to(self.device)
         self.eval()
