@@ -12,6 +12,9 @@ data:
   static_test: True
   square_size: 256
   random_train_test_split: True
+  detector: "Both"
+compute:
+  hpc: False
 constants:
   seed: 42
   n_classes: 3
