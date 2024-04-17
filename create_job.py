@@ -35,14 +35,14 @@ def main(config):
                 hyper.n_neurons={config.hyper.n_neurons}
                 hyper.with_skip_connections={config.hyper.with_skip_connections}
                 
-                data.train_size={config.hyper.train_size}
-                data.in_memory={config.hyper.in_memory}
-                data.static_test={config.hyper.static_test}
-                data.normalize={config.hyper.normalize}
-                data.p_flip_horizontal={config.hyper.p_flip_horizontal}
-                data.sampling_height={config.hyper.sampling_height}
-                data.sampling_width={config.hyper.sampling_width}
-                data.random_train_test_split={config.hyper.random_train_test_split}
+                data.train_size={config.data.train_size}
+                data.in_memory={config.data.in_memory}
+                data.static_test={config.data.static_test}
+                data.normalize={config.data.normalize}
+                data.p_flip_horizontal={config.data.p_flip_horizontal}
+                data.sampling_height={config.data.sampling_height}
+                data.sampling_width={config.data.sampling_width}
+                data.random_train_test_split={config.data.random_train_test_split}
                 data.detector={config.data.detector}
                 
                 compute.hpc={config.compute.hpc}
