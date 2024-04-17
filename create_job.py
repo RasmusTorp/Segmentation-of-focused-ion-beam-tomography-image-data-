@@ -26,11 +26,34 @@ def main(config):
                 -o lsf_logs/gpu_%J.out
                 -e lsf_logs/gpu_%J.err
                 -env "all" 
-                python3 train.py
+                python3 main.py
                 hyper.lr={config.hyper.lr} 
                 hyper.epochs={config.hyper.epochs}
                 hyper.batch_size={config.hyper.batch_size}
-                hyper.hidden_dim={config.hyper.hidden_dim}
+                hyper.n_depth={config.hyper.n_depth}
+                hyper.patience={config.hyper.patience}
+                hyper.n_neurons={config.hyper.n_neurons}
+                hyper.with_skip_connections={config.hyper.with_skip_connections}
+                
+                data.train_size={config.hyper.train_size}
+                data.in_memory={config.hyper.in_memory}
+                data.static_test={config.hyper.static_test}
+                data.normalize={config.hyper.normalize}
+                data.p_flip_horizontal={config.hyper.p_flip_horizontal}
+                data.sampling_height={config.hyper.sampling_height}
+                data.sampling_width={config.hyper.sampling_width}
+                data.random_train_test_split={config.hyper.random_train_test_split}
+                data.detector={config.data.detector}
+                
+                compute.hpc={config.compute.hpc}
+                
+                miscellaneous.save_as={config.miscellaneous.save_as}
+                
+                constants.seed={config.constants.seed}
+                constants.n_classes={config.constants.n_classes}
+                
+                wandb.track={config.wandb.track}
+                
                 """
     command = command.replace("\n", " ")
     command = " ".join(command.split())
