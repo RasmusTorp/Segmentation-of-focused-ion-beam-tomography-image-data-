@@ -6,11 +6,15 @@ from torch.utils.data.dataset import Dataset, random_split, TensorDataset
 from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 
-from torchvision.transforms import Normalize
+from torchvision.transforms import v2
+
+from itertools import product
 
 from PIL import Image
 class CustomDataset(Dataset):
-    def __init__(self, train_size = None, test_size = None, random_slicing = False, square_size = None, random_sampling = False, normalize = True, folder_path = "data/11t51center"):
+    def __init__(self, train_size = None, test_size = None, random_slicing = False, sampling_height = None, sampling_width = None,
+                random_sampling = False, folder_path = "data/11t51center", transforms = None):
+        
         self.labels_filepath = folder_path + "/Segmented"
         self.X_1_filepath = folder_path + "/Slicefront_corrected/Detector1"
         self.X_2_filepath = folder_path + "/Slicefront_corrected/Detector2"
@@ -22,7 +26,8 @@ class CustomDataset(Dataset):
         self.X_1_filenames.pop(541)
         self.X_2_filenames.pop(541)
 
-        self.square_size = square_size 
+        self.sampling_height = sampling_height
+        self.sampling_width = sampling_width
         self.random_sampling = random_sampling
 
         if not random_slicing:
@@ -36,17 +41,8 @@ class CustomDataset(Dataset):
                 self.X_1_filenames = self.X_1_filenames[int(len(self.X_1_filenames) * train_size):]
                 self.X_2_filenames = self.X_2_filenames[int(len(self.X_2_filenames) * train_size):]
                 self.labels_filenames = self.labels_filenames[int(len(self.labels_filenames) * train_size):]
-                
-        #TODO: random test slicing
-        
-        
-        #TODO: Normalizing and other transforms in dataset
-        if normalize:
-            # Values calculated from the dataset
-            self.normalize = Normalize(mean=[128.8504060979218, 91.33930754958642], std=[30.94350442869555, 27.551368693941175])
 
-        else:
-            self.normalize = False    
+        self.transforms = transforms
     
     def __len__(self):
         return len(self.labels_filenames)
@@ -54,11 +50,12 @@ class CustomDataset(Dataset):
     def get_random_square(self, X, y):
         h, w = X.shape[-2:]
 
-        start_h = np.random.randint(0, h - self.square_size)
-        start_w = np.random.randint(0, w - self.square_size)
+        start_h = np.random.randint(0, h - self.sampling_height)
+        start_w = np.random.randint(0, w - self.sampling_width)
         
-        X = X[:, start_h:start_h+self.square_size, start_w:start_w+self.square_size]
-        y = y[start_h:start_h+self.square_size, start_w:start_w+self.square_size]
+        X = X[:, start_h:start_h+self.sampling_height, start_w:start_w+self.sampling_width]
+        y = y[start_h:start_h+self.sampling_height, start_w:start_w+self.sampling_width]
+        
         return X, y
 
     def __getitem__(self, idx):
@@ -91,45 +88,84 @@ class CustomDataset(Dataset):
         if self.random_sampling:
             X, y = self.get_random_square(X,y)
         
+        if self.transforms:
+            X = self.transforms(X)
+        
         return X, y
 
 class InMemoryDataset(Dataset):
-    def __init__(self, X, y, square_size = None, random_sampling = False):
-        if not random_sampling and square_size:
+    def __init__(self, X, y, random_sampling = False, sampling_height = None, sampling_width = None, transforms = None):
+        
+        
+        #TODO: Generalize for all square sizes
+        if not random_sampling and sampling_height:
             # Calculate the starting indices for the crops
-            starts_h = [0, 0, X.shape[2] - square_size, X.shape[2] - square_size, 144, 144]
-            starts_w = [0, X.shape[3] - square_size, 0, X.shape[3] - square_size, 320, 641]
+            
+            n_space_width = X.shape[3] // sampling_width
+            n_space_height = X.shape[2] // sampling_height
 
-            # Crop the images and labels
-            X_crops = [X[:, :, start_h:start_h+square_size, start_w:start_w+square_size] for start_h, start_w in zip(starts_h, starts_w)]
-            y_crops = [y[:, start_h:start_h+square_size, start_w:start_w+square_size] for start_h, start_w in zip(starts_h, starts_w)]
+            x_crops = [i * sampling_width for i in range(n_space_width)]
+            y_crops = [i * sampling_height for i in range(n_space_height)]
+            
+            
+            # List of (x, y) pairs upper left corner
+            crop_pairs = list(product(x_crops, y_crops))
+            
+            # Crop the images
+            X_list = [X[:, :, y_:y_+sampling_height, x_:x_+sampling_width] for x_, y_ in crop_pairs]
 
-            # Concatenate the crops along the batch dimension
-            X = np.concatenate(X_crops, axis=0)
-            y = np.concatenate(y_crops, axis=0)
+            # If y is your labels tensor and you want to crop it in the same way
+            y_list = [y[:, y_:y_+sampling_height, x_:x_+sampling_width] for x_, y_ in crop_pairs]
+            
+            X = torch.cat(X_list, dim=0)
+            y = torch.cat(y_list, dim=0)
+            # starts_h = [0, 0, X.shape[2] - square_size, X.shape[2] - square_size, 144, 144]
+            # starts_w = [0, X.shape[3] - square_size, 0, X.shape[3] - square_size, 320, 641]
+
+            # # Crop the images and labels
+            # X_crops = [X[:, :, start_h:start_h+square_size, start_w:start_w+square_size] for start_h, start_w in zip(starts_h, starts_w)]
+            # y_crops = [y[:, start_h:start_h+square_size, start_w:start_w+square_size] for start_h, start_w in zip(starts_h, starts_w)]
+
+            # # Concatenate the crops along the batch dimension
+            # X = np.concatenate(X_crops, axis=0)
+            # y = np.concatenate(y_crops, axis=0)
 
         self.X = X
         self.y = y
-        self.square_size = square_size
+        self.sampling_height = sampling_height
+        self.sampling_width = sampling_width
         self.random_sampling = random_sampling
-        self.normalize = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    
+        self.transforms = transforms
+    
+        # self.normalize = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     
     def __len__(self):
         return len(self.y)
     
+    #TODO: Support non square sizes
     def get_random_square(self, X, y):
         h, w = X.shape[-2:]
 
-        start_h = np.random.randint(0, h - self.square_size)
-        start_w = np.random.randint(0, w - self.square_size)
+        start_h = np.random.randint(0, h - self.sampling_height)
+        start_w = np.random.randint(0, w - self.sampling_width)
         
-        X = X[:, start_h:start_h+self.square_size, start_w:start_w+self.square_size]
-        y = y[start_h:start_h+self.square_size, start_w:start_w+self.square_size]
+        X = X[:, start_h:start_h+self.sampling_height, start_w:start_w+self.sampling_width]
+        y = y[start_h:start_h+self.sampling_height, start_w:start_w+self.sampling_width]
         return X, y
 
+
+    #TODO: Flipping both X and y
     def __getitem__(self, idx):
-        if self.square_size and self.random_sampling:
-            return self.get_random_square(self.X[idx], self.y[idx])
+        if self.sampling_height and self.random_sampling:
+            X_i, y_i = self.get_random_square(self.X[idx], self.y[idx])
+            if self.transforms:
+                return self.transforms(X_i), y_i
+            else:
+                return X_i, y_i           
+            
+        if self.transforms:
+            return self.transforms(self.X[idx]), self.y[idx]
             
         return self.X[idx], self.y[idx]
 
@@ -232,13 +268,33 @@ def data_load_tensors(verbose:bool = True, processing:bool = True, one_hot:bool 
     X = X.float()
     return X, y 
 
-def get_dataloaders(batch_size:int=15, train_size:float = 0.8, seed:int = 42, verbose:bool = True, square_size = None, in_memory = False,static_test = False, random_train_test_split=True, folder_path = "data/11t51center"):
+def get_transforms(X, normalize = True, p_flip_horizontal = 0.):
+    transforms = []
+    
+    if normalize:
+        mu = X.mean(axis=(0, 2, 3)).tolist()
+        std = X.std(axis=(0, 2, 3)).tolist()
+        transforms.append(v2.Normalize(mean=mu, std=std))
+        
+    if p_flip_horizontal:
+        transforms.append(v2.RandomHorizontalFlip(p=p_flip_horizontal))
+        
+    return v2.Compose(transforms)
+
+def get_dataloaders(batch_size:int=15, train_size:float = 0.8, seed:int = 42, verbose:bool = True, 
+                    sampling_height = None, sampling_width = None, in_memory = False, static_test = False, 
+                    random_train_test_split=True, folder_path = "data/11t51center", detector = "both", normalize = True, p_flip_horizontal = 0.):
 
     
     if in_memory:
         X, y = data_load_tensors(verbose, folder_path=folder_path)
         
         
+        if detector == "1":
+            X = X[:,0:1,:,:]
+            
+        elif detector == "2":
+            X = X[:,1:2,:,:]
         if random_train_test_split:
             
             # Split data into train and test sets
@@ -249,33 +305,28 @@ def get_dataloaders(batch_size:int=15, train_size:float = 0.8, seed:int = 42, ve
             y_train = torch.tensor(y_train)
             X_test = torch.tensor(X_test)
             y_test = torch.tensor(y_test)
-            # dataset = TensorDataset(X, y)
-            # train_size = round(0.8 * len(dataset))  # 80% train, 20% test
-            # test_size = len(dataset) - train_size
             
-            # generator = torch.Generator().manual_seed(seed)
-            # train_dataset, test_dataset = random_split(dataset, [train_size, test_size], generator=generator)
-            # X_train, y_train = train_dataset.dataset.tensors
-            # X_test, y_test = test_dataset.dataset.tensors
+            transforms = get_transforms(X_train, normalize = normalize, p_flip_horizontal = p_flip_horizontal)
             
         else:
             train_size = int(train_size * len(X))   
             X_train, y_train = X[:train_size], y[:train_size]
             X_test, y_test = X[train_size:], y[train_size:]
-        train_dataset = InMemoryDataset(X_train, y_train, square_size=square_size, random_sampling = True)
-        test_dataset = InMemoryDataset(X_test, y_test, square_size=square_size, random_sampling = False)
+        train_dataset = InMemoryDataset(X_train, y_train, sampling_height=sampling_height, sampling_width=sampling_width,random_sampling = True, transforms = transforms)
+        test_dataset = InMemoryDataset(X_test, y_test, sampling_height=sampling_height, sampling_width=sampling_width, random_sampling = False, transforms = transforms)
 
+    #TODO: random sampling for this too
     else:
-        train_dataset = CustomDataset(train_size = train_size, square_size=square_size, random_sampling = True, folder_path=folder_path)
+        train_dataset = CustomDataset(train_size = train_size, sampling_height=sampling_height, sampling_width=sampling_width, random_sampling = True, folder_path=folder_path, normalize = normalize, p_flip_horizontal = p_flip_horizontal)
 
         if static_test:
             X, y = data_load_tensors(verbose, folder_path=folder_path)
             train_size = int(train_size * len(X))   
             X_test, y_test = X[train_size:], y[train_size:]
-            test_dataset = InMemoryDataset(X_test, y_test, square_size=square_size, random_sampling = False)
+            test_dataset = InMemoryDataset(X_test, y_test, sampling_height=sampling_height, sampling_width=sampling_width, random_sampling = False, normalize = normalize, p_flip_horizontal = p_flip_horizontal)
 
         else:
-            test_dataset = CustomDataset(test_size = 1 - train_size, square_size=square_size, random_sampling = True)
+            test_dataset = CustomDataset(test_size = 1 - train_size, sampling_height=sampling_height, sampling_width=sampling_width, random_sampling = True, normalize = normalize, p_flip_horizontal = p_flip_horizontal)
 
 
     train_loader = DataLoader(train_dataset, batch_size = batch_size, shuffle=True)
@@ -286,14 +337,17 @@ def get_dataloaders(batch_size:int=15, train_size:float = 0.8, seed:int = 42, ve
 if __name__ == "__main__":
     # (X_1, X_2), y = data_load_tensors()
 
-    # X, y = data_load_tensors()
+    X, y = data_load_tensors()
 
     # # Create a dataset
     # dataset = InMemoryDataset(X, y)
     train_size = 0.8
     test_size = 0.2
+    
+    sampling_height = 256
+    sampling_width = 256 * 2
 
-    trainSet = CustomDataset(train_size=train_size, square_size=256, random_sampling=True)
-    testSet = CustomDataset(test_size=test_size, square_size=256, random_sampling=False)
+    trainSet = CustomDataset(train_size=train_size, sampling_height = sampling_height, sampling_width=sampling_width, random_sampling=True)
+    testSet = CustomDataset(test_size=test_size, sampling_height = sampling_height, sampling_width=sampling_width, random_sampling=False)
 
     print("Done!")

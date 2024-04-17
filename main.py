@@ -7,7 +7,6 @@ from dataLoad import get_dataloaders
 from UNET_2D import UNet2D
 import torch
 
-
 with open("secret.txt", "r") as f:
     os.environ['WANDB_API_KEY'] = f.read().strip()
 
@@ -31,21 +30,27 @@ def main(config):
     
     else: 
         folder_path = "data/11t51center"
-    
+        
+        
     train_loader, test_loader = get_dataloaders(batch_size=config.hyper.batch_size, train_size=config.data.train_size, 
-                                                square_size=config.data.square_size, in_memory=config.data.in_memory, 
+                                                seed=config.constants.seed, sampling_height=config.data.sampling_height, 
+                                                sampling_width=config.data.sampling_width, 
+                                                in_memory=config.data.in_memory, 
                                                 static_test=config.data.static_test, folder_path=folder_path,
-                                                random_train_test_split=config.data.random_train_test_split)
+                                                random_train_test_split=config.data.random_train_test_split,
+                                                detector=config.data.detector, normalize=config.data.normalize,
+                                                p_flip_horizontal=config.data.p_flip_horizontal)
 
+    n_channels = 2 if config.data.detector == "both" else 1
+        
     model = UNet2D(n_neurons=config.hyper.n_neurons,
-                    n_channels=config.constants.n_channels, 
+                    n_channels=n_channels, 
                     n_classes=config.constants.n_classes,
                     n_depth=config.hyper.n_depth,
                     with_skip_connections=config.hyper.with_skip_connections)
     
     model.train_model(train_loader = train_loader, test_loader=test_loader, epochs=config.hyper.epochs, 
-                    lr=config.hyper.lr, patience=config.hyper.patience,
-                    track = config.wandb.track)
+                    lr=config.hyper.lr, patience=config.hyper.patience, track = config.wandb.track)
     
     # model.evaluate(test_loader)
     print("done")

@@ -62,7 +62,7 @@ class UpStep(nn.Module):
     
 class UNet2D(nn.Module):
     def __init__(self, n_neurons, n_channels, n_classes, n_depth = 3, kernel_size = 3, 
-                padding = 1, stride = 1, with_skip_connections=True):
+                padding = 1, stride = 1, with_skip_connections=True, device = None):
         super().__init__()
         
         self.with_skip_connections = with_skip_connections
@@ -105,7 +105,9 @@ class UNet2D(nn.Module):
         self.criterion = None
 
         self.optimizer = None
-        self.device = get_device()
+        
+        if not device:
+            self.device = get_device()
 
         self.final_conv = nn.Conv2d(in_channels=n_neurons, out_channels=self.n_classes, kernel_size=1)
 
@@ -147,8 +149,20 @@ class UNet2D(nn.Module):
         
         best_loss = np.inf
         no_improve_epochs = 0
+        
+        if test_loader:
+            val_loss = self.get_avg_loss(test_loader)
+            print(f'Validation loss: {val_loss}')
+            
+            pixel_accuracy, mean_iou = self.evaluate(test_loader)
+        
+            if track:
+                wandb.log({"val_loss": val_loss})
+                wandb.log({"pixel_accuracy": pixel_accuracy.item()})
+                wandb.log({"mean_iou": mean_iou.item()})
 
         for epoch in range(epochs):
+            self.train()
             total_loss = 0
             loss_calculated = 0
             for batch_idx, (data, target) in enumerate(train_loader):
@@ -175,12 +189,15 @@ class UNet2D(nn.Module):
 
             if test_loader:
                 val_loss = self.get_avg_loss(test_loader)
+                pixel_accuracy, mean_iou = self.evaluate(test_loader)
+                print(f'Validation loss: {val_loss}')
                 
                 if track:
                     wandb.log({"val_loss": val_loss})
+                    wandb.log({"pixel_accuracy": pixel_accuracy.item()})
+                    wandb.log({"mean_iou": mean_iou.item()})
                     
-                    
-                print(f'Validation loss: {val_loss}')
+                
                 if val_loss < best_loss:
                     best_loss = val_loss
                     self.save_model(save_as)
@@ -215,12 +232,21 @@ class UNet2D(nn.Module):
         self.to(self.device)
         self.eval()
         with torch.no_grad():
+            all_outputs = []
+            all_targets = []
             for data, target in test_loader:
                 data, target = data.to(self.device), target.to(self.device)
                 output = self.to_segmentation(data)
+                all_outputs.append(output)
+                all_targets.append(target)
 
-                pixel_accuracy, mean_iou = evaluate_model(output, target, return_values=True, print_values=False)
-                print(f'Pixel accuracy: {pixel_accuracy.item()}, Mean IoU: {mean_iou.item()}')
+            all_outputs = torch.cat(all_outputs, dim=0)
+            all_targets = torch.cat(all_targets, dim=0)
+
+            pixel_accuracy, mean_iou = evaluate_model(all_outputs, all_targets, return_values=True, print_values=False)
+            print(f'Pixel accuracy: {pixel_accuracy.item()}, Mean IoU: {mean_iou.item()}')
+            return pixel_accuracy, mean_iou
+            
                 
     def save_model(self, fileName):
         torch.save(self.state_dict(), f"saved_models/{fileName}")
@@ -235,30 +261,41 @@ class UNet2D(nn.Module):
 if __name__ == "__main__":
     BATCH_SIZE = 15
     TRAIN_SIZE = 0.8
-    SQUARE_SIZE = 256
-    EPOCHS = 11
+    SAMPLING_HEIGHT= 256
+    SAMPLING_WIDTH = 256*2
+    EPOCHS = 2
     N_NEURONS = 64
     LEARNING_RATE = 0.001
     PATIENCE = 5
     N_DEPTH = 3
 
-    IN_MEMORY = False
+    IN_MEMORY = True
     STATIC_TEST = True
     WITH_SKIP_CONNECTIONS = True
+    RANDOM_TRAIN_TEST_SPLIT = True
     
+    
+    DETECTOR = "both"
+    
+    n_channels = 2 if DETECTOR == "both" else 1
     save_as = "best_model.pth"
     
-    train_loader, test_loader = get_dataloaders(batch_size=BATCH_SIZE, train_size=TRAIN_SIZE, square_size=SQUARE_SIZE, in_memory=IN_MEMORY, static_test=STATIC_TEST)
+    train_loader, test_loader = get_dataloaders(batch_size=BATCH_SIZE, train_size=TRAIN_SIZE, 
+                                                sampling_height=SAMPLING_HEIGHT, sampling_width=SAMPLING_WIDTH, 
+                                                in_memory=IN_MEMORY, 
+                                                static_test=STATIC_TEST, detector=DETECTOR,
+                                                random_train_test_split=RANDOM_TRAIN_TEST_SPLIT)
 
     model = UNet2D(n_neurons=N_NEURONS,
-                    n_channels=2,
+                    n_channels=n_channels,
                     n_classes=3,
                     n_depth=N_DEPTH,
-                    with_skip_connections=WITH_SKIP_CONNECTIONS,
-                    save_as=save_as)
+                    with_skip_connections=WITH_SKIP_CONNECTIONS)
     
-    # model.train_model(train_loader = train_loader, test_loader = test_loader, epochs=EPOCHS, lr=LEARNING_RATE)
-    model.train_model(train_loader = train_loader, test_loader=test_loader, epochs=EPOCHS, lr=LEARNING_RATE, patience=PATIENCE)
+    model.evaluate(test_loader)
+    
+    model.train_model(train_loader = train_loader, test_loader=test_loader, 
+                    epochs=EPOCHS, lr=LEARNING_RATE, patience=PATIENCE,save_as=save_as)
     
     model.evaluate(test_loader)
     
