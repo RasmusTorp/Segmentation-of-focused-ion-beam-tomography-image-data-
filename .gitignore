@@ -7,3 +7,4 @@ secret.txt
 *.yaml
 *.log
 /saved_models
+transferModelCommand.txt
