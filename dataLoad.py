@@ -10,7 +10,6 @@ from torchvision.transforms import v2
 
 from itertools import product
 
-from PIL import Image
 class CustomDataset(Dataset):
     def __init__(self, train_size = None, test_size = None, random_slicing = False, sampling_height = None, sampling_width = None,
                 random_sampling = False, folder_path = "data/11t51center", transforms = None):
@@ -94,7 +93,7 @@ class CustomDataset(Dataset):
         return X, y
 
 class InMemoryDataset(Dataset):
-    def __init__(self, X, y, random_sampling = False, sampling_height = None, sampling_width = None, transforms = None):
+    def __init__(self, X, y, random_sampling = False, sampling_height = None, sampling_width = None, transforms = None, p_flip_horizontal = 0.0):
         
         
         #TODO: Generalize for all square sizes
@@ -137,6 +136,7 @@ class InMemoryDataset(Dataset):
         self.random_sampling = random_sampling
     
         self.transforms = transforms
+        self.p_flip_horizontal = p_flip_horizontal
     
         # self.normalize = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     
@@ -157,17 +157,22 @@ class InMemoryDataset(Dataset):
 
     #TODO: Flipping both X and y
     def __getitem__(self, idx):
-        if self.sampling_height and self.random_sampling:
-            X_i, y_i = self.get_random_square(self.X[idx], self.y[idx])
-            if self.transforms:
-                return self.transforms(X_i), y_i
-            else:
-                return X_i, y_i           
+        flip_horizontal = self.p_flip_horizontal > np.random.rand()
+        if self.sampling_height and self.random_sampling:    
+            X_i, y_i = self.get_random_square(self.X[idx], self.y[idx])   
+        
+        else:
+            X_i, y_i = self.X[idx], self.y[idx]
             
         if self.transforms:
-            return self.transforms(self.X[idx]), self.y[idx]
+            X_i = self.transforms(X_i)
+        
+        if flip_horizontal:
+            x_channels = X_i.shape[0]
+            X_i = torch.flip(X_i, [x_channels])  # Flip horizontally
+            y_i = torch.flip(y_i, [1])  # Flip horizontally
             
-        return self.X[idx], self.y[idx]
+        return X_i, y_i
 
 def data_load_numpy(verbose:bool = True, processing = False, square_size = None, folder_path = "data/11t51center"):
     """
@@ -306,13 +311,14 @@ def get_dataloaders(batch_size:int=15, train_size:float = 0.8, seed:int = 42, ve
             X_test = torch.tensor(X_test)
             y_test = torch.tensor(y_test)
             
-            transforms = get_transforms(X_train, normalize = normalize, p_flip_horizontal = p_flip_horizontal)
+            # transforms = get_transforms(X_train, normalize = normalize, p_flip_horizontal = p_flip_horizontal)
+            transforms = get_transforms(X_train, normalize=normalize)
             
         else:
             train_size = int(train_size * len(X))   
             X_train, y_train = X[:train_size], y[:train_size]
             X_test, y_test = X[train_size:], y[train_size:]
-        train_dataset = InMemoryDataset(X_train, y_train, sampling_height=sampling_height, sampling_width=sampling_width,random_sampling = True, transforms = transforms)
+        train_dataset = InMemoryDataset(X_train, y_train, sampling_height=sampling_height, sampling_width=sampling_width,random_sampling = True, transforms = transforms, p_flip_horizontal = p_flip_horizontal)
         test_dataset = InMemoryDataset(X_test, y_test, sampling_height=sampling_height, sampling_width=sampling_width, random_sampling = False, transforms = transforms)
 
     #TODO: random sampling for this too
@@ -347,7 +353,8 @@ if __name__ == "__main__":
     sampling_height = 256
     sampling_width = 256 * 2
 
-    trainSet = CustomDataset(train_size=train_size, sampling_height = sampling_height, sampling_width=sampling_width, random_sampling=True)
-    testSet = CustomDataset(test_size=test_size, sampling_height = sampling_height, sampling_width=sampling_width, random_sampling=False)
-
+    # trainSet = CustomDataset(train_size=train_size, sampling_height = sampling_height, sampling_width=sampling_width, random_sampling=True)
+    # testSet = CustomDataset(test_size=test_size, sampling_height = sampling_height, sampling_width=sampling_width, random_sampling=False)
+    
+    
     print("Done!")
