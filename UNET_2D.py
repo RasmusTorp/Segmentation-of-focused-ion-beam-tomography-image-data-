@@ -8,6 +8,7 @@ from utils import get_device
 from evaluation import evaluate_model
 import numpy as np
 import wandb
+import matplotlib.pyplot as plt
 
 # Some parts partly inspired by https://github.com/ptrblck/pytorch_misc/blob/master/unet_demo.py and github copilot as well as original U-Net paper
 class DoubleConv(nn.Module):
@@ -102,12 +103,12 @@ class UNet2D(nn.Module):
             )
         
         self.n_classes = n_classes
+        self.n_channels = n_channels
         self.criterion = None
 
         self.optimizer = None
         
-        if not device:
-            self.device = get_device()
+        self.device = get_device() if not device else device
 
         self.final_conv = nn.Conv2d(in_channels=n_neurons, out_channels=self.n_classes, kernel_size=1)
 
@@ -253,10 +254,101 @@ class UNet2D(nn.Module):
         
     def load_model(self, file_path, map_location = None):
         if map_location is None:
-            self.load_state_dict(torch.load(f"saved_models/{file_path}"))
+            state_dict = torch.load(file_path)
+            self.load_state_dict(state_dict)
             
         else:
-            self.load_state_dict(torch.load(f"saved_models/{file_path}"), map_location=map_location)
+            state_dict = torch.load(file_path, map_location=map_location)
+            self.load_state_dict(state_dict)
+            
+    def plot_trough_network(self, x, save_as):
+        self.eval()
+        encoder_outs = []
+        
+        x_original = x
+            
+        for i, layer in enumerate(self.encoder):
+            x = layer(x)
+            plt.figure(figsize=(9, 7))
+            plt.imshow(x[0][0].detach().numpy())
+            plt.title(f'Encoder Layer {i+1}, Shape: {list(x.shape)}')
+            plt.tight_layout()
+            plt.savefig(f"plots/{save_as}_{i}.png")
+            plt.clf()
+            encoder_outs.append(x)
+            
+        for i, layer in enumerate(self.decoder):
+            x = layer(x, encoder_outs[-i-2])
+            plt.figure(figsize=(9, 7))
+            plt.imshow(x[0][0].detach().numpy())
+            plt.title(f'Decoder Layer {i+1}, Shape: {list(x.shape)}')
+            plt.tight_layout()
+            plt.savefig(f"plots/{save_as}_{len(self.encoder) + i}.png")
+            plt.clf()
+            
+        x = self.final_conv(x)
+        fig, axs = plt.subplots(3, 1, figsize=(10, 15))
+        plt.title(f'Final Convolution, Shape: {list(x.shape)}')
+        axs[0].imshow(x[0][0].detach().numpy())
+        axs[0].set_title(f'P(X = 0)')
+        axs[1].imshow(x[0][1].detach().numpy())
+        axs[1].set_title(f'P(X = 1)')
+        axs[2].imshow(x[0][2].detach().numpy())
+        axs[2].set_title(f'P(X = 2)')
+        plt.tight_layout()
+        plt.savefig(f"plots/{save_as}_final.png")
+        plt.clf()
+        
+        encoder_outs = []
+        
+        fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+        detector1 = x[0][0].detach().numpy()
+        detector2 = x[0][1].detach().numpy()
+        
+        axs[0].imshow(detector1)
+        axs[0].set_title('Detector 1')
+        
+        axs[1].imshow(detector2)
+        axs[1].set_title('Detector 2')
+        
+        plt.tight_layout()
+        plt.savefig(f"plots/{save_as}_input.png")
+        plt.clf()
+    
+        # In one plot
+        x = x_original
+        encoder_outs = []
+        
+        fig, axs = plt.subplots(4, 2, figsize=(10, 20))  # Create a figure and a 4x2 subplot grid
+
+        for i, layer in enumerate(self.encoder):
+            x = layer(x)
+            axs[i//2, i%2].imshow(x[0][0].detach().numpy())
+            axs[i//2, i%2].set_title(f'Encoder Layer {i+1}, Shape: {list(x.shape)}')
+            encoder_outs.append(x)
+            
+        for i, layer in enumerate(self.decoder):
+            x = layer(x, encoder_outs[-i-2])
+            axs[(i+len(self.encoder))//2, (i+len(self.encoder))%2].imshow(x[0][0].detach().numpy())
+            axs[(i+len(self.encoder))//2, (i+len(self.encoder))%2].set_title(f'Decoder Layer {i+1}, Shape: {list(x.shape)}')
+            
+        x = self.final_conv(x)
+        axs[-1, -1].imshow(x[0][0].detach().numpy())
+        axs[-1, -1].set_title(f'Final Convolution, Shape: {list(x.shape)}')
+
+        plt.subplots_adjust(hspace=-0.3) 
+        plt.tight_layout()
+        plt.savefig(f"plots/{save_as}.png")
+        plt.clf()
+        
+        segmentation = x.argmax(dim=1)
+        plt.figure(figsize=(9, 7))
+        plt.imshow(segmentation[0].detach().numpy())
+        plt.title('Segmentation')
+        plt.tight_layout()
+        plt.savefig(f"plots/{save_as}_segmentation.png")
+        plt.clf()
+        
     
 if __name__ == "__main__":
     BATCH_SIZE = 15
