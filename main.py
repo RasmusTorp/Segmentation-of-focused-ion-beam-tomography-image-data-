@@ -50,7 +50,7 @@ def main(config):
                     with_skip_connections=config.hyper.with_skip_connections)
     
     model.train_model(train_loader = train_loader, test_loader=test_loader, epochs=config.hyper.epochs, 
-                    lr=config.hyper.lr, patience=config.hyper.patience, track = config.wandb.track)
+                    lr=config.hyper.lr, patience=config.hyper.patience, track = config.wandb.track, save_as=config.miscellaneous.save_as)
     
     # model.evaluate(test_loader)
     print("done")
