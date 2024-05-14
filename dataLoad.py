@@ -273,7 +273,7 @@ def data_load_tensors(verbose:bool = True, processing:bool = True, one_hot:bool 
     X = X.float()
     return X, y 
 
-def get_transforms(X, normalize = True, p_flip_horizontal = 0.):
+def get_transforms(X, normalize = True):
     transforms = []
     
     if normalize:
@@ -281,12 +281,9 @@ def get_transforms(X, normalize = True, p_flip_horizontal = 0.):
         std = X.std(axis=(0, 2, 3)).tolist()
         transforms.append(v2.Normalize(mean=mu, std=std))
         
-    if p_flip_horizontal:
-        transforms.append(v2.RandomHorizontalFlip(p=p_flip_horizontal))
-        
     return v2.Compose(transforms)
 
-def get_dataloaders(batch_size:int=15, train_size:float = 0.8, seed:int = 42, verbose:bool = True, 
+def get_dataloaders(batch_size:int=15, train_size:float = 0.8, test_size:float = 0.2,seed:int = 42, verbose:bool = True, 
                     sampling_height = None, sampling_width = None, in_memory = False, static_test = False, 
                     random_train_test_split=True, folder_path = "data/11t51center", detector = "both", normalize = True, p_flip_horizontal = 0.):
 
@@ -303,13 +300,18 @@ def get_dataloaders(batch_size:int=15, train_size:float = 0.8, seed:int = 42, ve
         if random_train_test_split:
             
             # Split data into train and test sets
-            X_train, X_test, y_train, y_test = train_test_split(X.numpy(), y.numpy(), train_size=train_size, random_state=seed)
-
+            X_train, X_test, y_train, y_test = train_test_split(X.numpy(), y.numpy(), test_size=test_size, random_state=seed)
+            
+            train_size_int = int(train_size * len(X))
+            X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, train_size=train_size_int, random_state=seed)
+            
             # Convert back to PyTorch tensors
             X_train = torch.tensor(X_train)
             y_train = torch.tensor(y_train)
             X_test = torch.tensor(X_test)
             y_test = torch.tensor(y_test)
+            X_val = torch.tensor(X_val)
+            y_val = torch.tensor(y_val) 
             
             # transforms = get_transforms(X_train, normalize = normalize, p_flip_horizontal = p_flip_horizontal)
             transforms = get_transforms(X_train, normalize=normalize)
@@ -320,7 +322,8 @@ def get_dataloaders(batch_size:int=15, train_size:float = 0.8, seed:int = 42, ve
             X_test, y_test = X[train_size:], y[train_size:]
         train_dataset = InMemoryDataset(X_train, y_train, sampling_height=sampling_height, sampling_width=sampling_width,random_sampling = True, transforms = transforms, p_flip_horizontal = p_flip_horizontal)
         test_dataset = InMemoryDataset(X_test, y_test, sampling_height=sampling_height, sampling_width=sampling_width, random_sampling = False, transforms = transforms)
-
+        val_dataset = InMemoryDataset(X_val, y_val, sampling_height=sampling_height, sampling_width=sampling_width, random_sampling = False, transforms = transforms)
+        
     #TODO: random sampling for this too
     else:
         train_dataset = CustomDataset(train_size = train_size, sampling_height=sampling_height, sampling_width=sampling_width, random_sampling = True, folder_path=folder_path, normalize = normalize, p_flip_horizontal = p_flip_horizontal)
@@ -336,9 +339,10 @@ def get_dataloaders(batch_size:int=15, train_size:float = 0.8, seed:int = 42, ve
 
 
     train_loader = DataLoader(train_dataset, batch_size = batch_size, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size = batch_size, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size = batch_size, shuffle=False)
+    val_loader = DataLoader(val_dataset, batch_size = batch_size, shuffle=False)
 
-    return train_loader, test_loader
+    return train_loader, test_loader, val_loader
 
 if __name__ == "__main__":
     # (X_1, X_2), y = data_load_tensors()
