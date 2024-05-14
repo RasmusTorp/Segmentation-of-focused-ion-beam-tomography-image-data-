@@ -137,7 +137,7 @@ class UNet2D(nn.Module):
         x = self.forward(x)
         return x.argmax(dim=1)
 
-    def train_model(self, train_loader, test_loader = None, optimizer = "adam", lr = 0.001
+    def train_model(self, train_loader, val_loader = None, optimizer = "adam", lr = 0.001
                     ,criterion = "crossentropy", epochs = 10, verbose=2, patience=5, save_as="best_model.pth", track = False):
         
         self.to(self.device)
@@ -151,11 +151,11 @@ class UNet2D(nn.Module):
         best_loss = np.inf
         no_improve_epochs = 0
         
-        if test_loader:
-            val_loss = self.get_avg_loss(test_loader)
+        if val_loader:
+            val_loss = self.get_avg_loss(val_loader)
             print(f'Validation loss: {val_loss}')
             
-            pixel_accuracy, mean_iou = self.evaluate(test_loader)
+            pixel_accuracy, mean_iou = self.evaluate(val_loader)
         
             if track:
                 wandb.log({"val_loss": val_loss})
@@ -188,9 +188,9 @@ class UNet2D(nn.Module):
             if track:
                 wandb.log({"train_loss": total_loss / loss_calculated})
 
-            if test_loader:
-                val_loss = self.get_avg_loss(test_loader)
-                pixel_accuracy, mean_iou = self.evaluate(test_loader)
+            if val_loader:
+                val_loss = self.get_avg_loss(val_loader)
+                pixel_accuracy, mean_iou = self.evaluate(val_loader)
                 print(f'Validation loss: {val_loss}')
                 
                 if track:
@@ -259,8 +259,10 @@ class UNet2D(nn.Module):
             
         else:
             state_dict = torch.load(file_path, map_location=map_location)
+
             self.load_state_dict(state_dict)
-            
+
+    # Method used exclusively for debugging and visualization
     def plot_trough_network(self, x, save_as):
         self.eval()
         encoder_outs = []
