@@ -32,7 +32,8 @@ def main(config):
         folder_path = "data/11t51center"
         
         
-    train_loader, test_loader = get_dataloaders(batch_size=config.hyper.batch_size, train_size=config.data.train_size, 
+    train_loader, test_loader, val_loader = get_dataloaders(batch_size=config.hyper.batch_size, train_size=config.data.train_size,
+                                                test_size=config.data.test_size, 
                                                 seed=config.constants.seed, sampling_height=config.data.sampling_height, 
                                                 sampling_width=config.data.sampling_width, 
                                                 in_memory=config.data.in_memory, 
@@ -49,10 +50,10 @@ def main(config):
                     n_depth=config.hyper.n_depth,
                     with_skip_connections=config.hyper.with_skip_connections)
     
-    model.train_model(train_loader = train_loader, test_loader=test_loader, epochs=config.hyper.epochs, 
+    model.train_model(train_loader = train_loader, val_loader=val_loader, epochs=config.hyper.epochs, 
                     lr=config.hyper.lr, patience=config.hyper.patience, track = config.wandb.track, save_as=config.miscellaneous.save_as)
     
-    # model.evaluate(test_loader)
+    model.evaluate(test_loader)
     print("done")
     
 if __name__ == "__main__":
