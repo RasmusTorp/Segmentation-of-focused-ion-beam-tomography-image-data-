@@ -164,7 +164,7 @@ class InMemoryDataset(Dataset):
         else:
             X_i, y_i = self.X[idx], self.y[idx]
             
-        if self.transforms:
+        if self.transforms:   # e.g. normalization
             X_i = self.transforms(X_i)
         
         if flip_horizontal:
@@ -173,6 +173,12 @@ class InMemoryDataset(Dataset):
             y_i = torch.flip(y_i, [1])  # Flip horizontally
             
         return X_i, y_i
+    
+
+class IonBeamTrainDataset(Dataset):
+    def __init__(self, X_1_filenames = None, X_2 = None, label_filenames = None, sampling_height = None, random_sampling = False,
+                transforms = None, p_flip_horizontal = 0.0):    
+        pass
 
 def data_load_numpy(verbose:bool = True, processing = False, square_size = None, folder_path = "data/11t51center"):
     """
