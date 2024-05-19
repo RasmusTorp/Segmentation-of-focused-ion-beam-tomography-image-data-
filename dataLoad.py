@@ -284,7 +284,7 @@ def get_transforms(X, normalize = True):
     return v2.Compose(transforms)
 
 def get_dataloaders(batch_size:int=15, train_size:float = 0.8, test_size:float = 0.2,seed:int = 42, verbose:bool = True, 
-                    sampling_height = None, sampling_width = None, in_memory = False, static_test = False, 
+                    sampling_height = None, sampling_width = None, in_memory = False, static_test = False, random_sampling_train = False,
                     random_train_test_split=True, folder_path = "data/11t51center", detector = "both", normalize = True, p_flip_horizontal = 0.):
 
     
@@ -320,9 +320,9 @@ def get_dataloaders(batch_size:int=15, train_size:float = 0.8, test_size:float =
             train_size = int(train_size * len(X))   
             X_train, y_train = X[:train_size], y[:train_size]
             X_test, y_test = X[train_size:], y[train_size:]
-        train_dataset = InMemoryDataset(X_train, y_train, sampling_height=sampling_height, sampling_width=sampling_width,random_sampling = True, transforms = transforms, p_flip_horizontal = p_flip_horizontal)
-        test_dataset = InMemoryDataset(X_test, y_test, sampling_height=sampling_height, sampling_width=sampling_width, random_sampling = False, transforms = transforms)
-        val_dataset = InMemoryDataset(X_val, y_val, sampling_height=sampling_height, sampling_width=sampling_width, random_sampling = False, transforms = transforms)
+        train_dataset = InMemoryDataset(X_train, y_train, sampling_height=sampling_height, sampling_width=sampling_width,random_sampling = random_sampling_train, transforms = transforms, p_flip_horizontal = p_flip_horizontal)
+        test_dataset = InMemoryDataset(X_test, y_test, sampling_height=sampling_height, sampling_width=sampling_width, random_sampling = random_sampling_train, transforms = transforms)
+        val_dataset = InMemoryDataset(X_val, y_val, sampling_height=sampling_height, sampling_width=sampling_width, random_sampling = static_test, transforms = transforms)
         
     #TODO: random sampling for this too
     else:

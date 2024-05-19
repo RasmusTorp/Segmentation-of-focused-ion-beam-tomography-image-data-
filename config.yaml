@@ -10,6 +10,7 @@ data:
   train_size: 0.2
   test_size: 0.2
   in_memory: True
+  random_sampling_train: False
   static_test: True
   normalize: True
   p_flip_horizontal: 0.0
