@@ -25,6 +25,7 @@ def main(config):
         except Exception as e:
             print(f"\nCould not initiate wandb logger\nError: {e}")
     
+    # Chooses 
     if config.compute.hpc:
         folder_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir, os.pardir, "data", "data","11t51center"))
     
@@ -40,7 +41,9 @@ def main(config):
                                                 static_test=config.data.static_test, folder_path=folder_path,
                                                 random_train_test_split=config.data.random_train_test_split,
                                                 detector=config.data.detector, normalize=config.data.normalize,
-                                                p_flip_horizontal=config.data.p_flip_horizontal)
+                                                p_flip_horizontal=config.data.p_flip_horizontal,
+                                                add_gaussian_noise=config.data.add_gaussian_noise,
+                                                add_jitter=config.data.add_jitter,)
 
     n_channels = 2 if config.data.detector == "both" else 1
         
