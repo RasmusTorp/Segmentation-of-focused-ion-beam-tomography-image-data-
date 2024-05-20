@@ -1,5 +1,5 @@
 
-from dataLoad import data_load_tensors, get_dataloaders
+from dataLoad import get_dataloaders
 import torch.nn as nn
 import torch
 import torch.nn as nn

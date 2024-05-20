@@ -5,6 +5,8 @@ import wandb
 import os
 from dataLoad import get_dataloaders
 from UNET_2D import UNet2D
+from loadDataFunctions.loadMing import load_ming
+from loadDataFunctions.load11t51center import data_load_tensors
 import torch
 
 with open("secret.txt", "r") as f:
@@ -29,10 +31,16 @@ def main(config):
         folder_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir, os.pardir, "data", "data","11t51center"))
     
     else: 
-        folder_path = "data/11t51center"
+        folder_path = f"data/{config.data.dataset}"
+    
+    if config.data.dataset=="Ming_cell":
+        X, y = load_ming(folder_path)
         
+    elif config.data.dataset=="11t51center":
+        X, y = data_load_tensors(folder_path=folder_path)
+    
         
-    train_loader, test_loader, val_loader = get_dataloaders(batch_size=config.hyper.batch_size, train_size=config.data.train_size,
+    train_loader, test_loader, val_loader = get_dataloaders(X, y, batch_size=config.hyper.batch_size, train_size=config.data.train_size,
                                                 test_size=config.data.test_size, 
                                                 seed=config.constants.seed, sampling_height=config.data.sampling_height, 
                                                 sampling_width=config.data.sampling_width, 
