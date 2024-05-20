@@ -51,12 +51,23 @@ def main(config):
                                                 p_flip_horizontal=config.data.p_flip_horizontal)
 
     n_channels = 2 if config.data.detector == "both" else 1
-        
+    
+    
+    
     model = UNet2D(n_neurons=config.hyper.n_neurons,
                     n_channels=n_channels, 
                     n_classes=config.constants.n_classes,
                     n_depth=config.hyper.n_depth,
                     with_skip_connections=config.hyper.with_skip_connections)
+    
+    
+    if config.hyper.hotstart_model:
+        if config.compute.hpc:
+            model.load_model(f"saved_models/{config.hyper.hotstart_model}")
+        
+        else:
+            model.load_model(f"saved_models/{config.hyper.hotstart_model}", map_location=torch.device('cpu'))
+    
     
     model.train_model(train_loader = train_loader, val_loader=val_loader, epochs=config.hyper.epochs, 
                     lr=config.hyper.lr, patience=config.hyper.patience, track = config.wandb.track, save_as=config.miscellaneous.save_as)

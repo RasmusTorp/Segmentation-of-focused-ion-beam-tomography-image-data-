@@ -6,6 +6,7 @@ hyper:
   with_skip_connections: True
   n_depth: 3
   patience: 100
+  hotstart_model: False
 data:
   dataset: "11t51center"
   train_size: 0.2
