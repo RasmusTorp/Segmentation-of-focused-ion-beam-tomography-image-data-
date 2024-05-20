@@ -28,7 +28,7 @@ def main(config):
             print(f"\nCould not initiate wandb logger\nError: {e}")
     
     if config.compute.hpc:
-        folder_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir, os.pardir, "data", "data","11t51center"))
+        folder_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir, os.pardir, "data", "data", config.data.dataset))
     
     else: 
         folder_path = f"data/{config.data.dataset}"
