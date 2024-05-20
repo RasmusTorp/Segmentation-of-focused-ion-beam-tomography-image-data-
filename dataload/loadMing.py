@@ -25,7 +25,7 @@ def load_ming(folder_path):
 
     # X1 and X2 are reversed in this dataset
     X_1_filepath = folder_path + "/Ming Raw aligned images/Slicefront corrected/Detector2_cropped"
-    X_2_filepath = folder_path + "/Ming Raw aligned images/Slicefront corrected/Detector2_cropped"
+    X_2_filepath = folder_path + "/Ming Raw aligned images/Slicefront corrected/Detector1_cropped"
 
     labels_filenames = sorted(os.listdir(labels_filepath))
     X_1_filenames = sorted(os.listdir(X_1_filepath))
