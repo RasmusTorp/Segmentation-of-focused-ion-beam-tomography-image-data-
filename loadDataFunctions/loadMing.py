@@ -36,6 +36,7 @@ def load_ming(folder_path):
     X_2 = np.array([plt.imread(X_2_filepath + "/" + filename) for filename in X_2_filenames]) 
     
     X = np.stack([X_1,X_2], axis=0)
+    X = np.transpose(X, (1, 0, 2, 3))
     
     return preprocess_ming(X, y)
     
@@ -44,4 +45,3 @@ if __name__ == "__main__":
     X, y = load_ming(folder_path)
     print(X.shape, y.shape)
 
-print("done")

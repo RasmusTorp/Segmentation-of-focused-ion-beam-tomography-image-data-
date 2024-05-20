@@ -52,7 +52,7 @@ def data_load_numpy(verbose:bool = True, processing = False, folder_path = "data
 
     return X, labels
 
-def data_load_tensors(verbose:bool = True, processing:bool = True, one_hot:bool = False, map_lapels = True, square_size = None, folder_path = "data/11t51center"):
+def data_load_tensors(verbose:bool = True, processing:bool = True, one_hot:bool = False, map_lapels = True, folder_path = "data/11t51center"):
     """
     Load data into tensors and perform data processing.
 
