@@ -1,13 +1,13 @@
 hyper:
   lr: 0.001
-  epochs: 2
+  epochs: 100
   batch_size: 35
   n_neurons: 64  
   with_skip_connections: True
   n_depth: 3
-  patience: 2
+  patience: 100
 data:
-  dataset: "Ming_cell"
+  dataset: "11t51center"
   train_size: 0.2
   test_size: 0.2
   in_memory: True
@@ -20,9 +20,9 @@ data:
   random_train_test_split: True
   detector: "both"
 compute:
-  hpc: True
+  hpc: False
 miscellaneous:
-  save_as: "MingTestRun"
+  save_as: "NoModelName"
 constants:
   seed: 42
   n_classes: 3
