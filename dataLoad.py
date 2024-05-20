@@ -5,10 +5,12 @@ import torch
 from torch.utils.data.dataset import Dataset, random_split, TensorDataset
 from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
-
 from torchvision.transforms import v2
-
 from itertools import product
+
+from dataload.load11t51center import data_load_tensors
+from dataload.loadMing import load_ming
+
 
 class CustomDataset(Dataset):
     def __init__(self, train_size = None, test_size = None, random_slicing = False, sampling_height = None, sampling_width = None,
@@ -179,104 +181,6 @@ class InMemoryDataset(Dataset):
             
         return X_i, y_i
 
-def data_load_numpy(verbose:bool = True, processing = False, square_size = None, folder_path = "data/11t51center"):
-    """
-    Load and process image data from the specified folder path using numpy arrays.
-    
-    Args:
-        verbose (bool): If True, print loading and processing updates.
-        processing (bool): If True, process the loaded data.
-        
-    Returns:
-        tuple: A tuple containing the image data (X) and corresponding labels.
-    """
-
-    labels_filepath = folder_path + "/Segmented"
-    X_1_filepath = folder_path + "/Slicefront_corrected/Detector1"
-    X_2_filepath = folder_path + "/Slicefront_corrected/Detector2"
-
-    labels_filenames = sorted(os.listdir(labels_filepath))
-    X_1_filenames = sorted(os.listdir(X_1_filepath))
-    X_2_filenames = sorted(os.listdir(X_2_filepath))
-
-    if verbose:
-        print("\nLoading data...")
-
-    labels = np.array([plt.imread(labels_filepath + "/" + filename) for filename in labels_filenames])
-    X_1 = np.array([plt.imread(X_1_filepath + "/" + filename) for filename in X_1_filenames])
-    X_2 = np.array([plt.imread(X_2_filepath + "/" + filename) for filename in X_2_filenames]) 
-
-    # X_1 = np.array([np.squeeze(np.array(Image.open(X_1_filepath + "/" + filename).convert('L'))) for filename in X_1_filenames])
-    # X_2 = np.array([np.squeeze(np.array(Image.open(X_2_filepath + "/" + filename).convert('L'))) for filename in X_2_filenames])
-    # if verbose:
-    #     print("\nData loaded.")
-
-    if processing:
-        if verbose:
-            print("\nProcessing data...")
-
-
-        X_1 = X_1[:,357-1:900, 4-1:900]
-        X_2 = X_2[:,357-1:900, 4-1:900]
-
-        frame_to_delete = 542
-        X_1 = np.delete(X_1, frame_to_delete, axis=0)
-        X_2 = np.delete(X_2, frame_to_delete, axis=0)
-
-        if verbose:
-            print("\nData processed.\n")
-    
-    X = np.stack([X_1,X_2], axis=0)
-    
-    X = np.transpose(X, (1, 0, 2, 3))
-
-    if square_size:
-        # Calculate the starting indices for the crops
-        starts_h = [0, 0, X.shape[2] - square_size, X.shape[2] - square_size, 144, 144]
-        starts_w = [0, X.shape[3] - square_size, 0, X.shape[3] - square_size, 320, 641]
-
-        # Crop the images and labels
-        X_crops = [X[:, :, start_h:start_h+square_size, start_w:start_w+square_size] for start_h, start_w in zip(starts_h, starts_w)]
-        labels_crops = [labels[:, start_h:start_h+square_size, start_w:start_w+square_size] for start_h, start_w in zip(starts_h, starts_w)]
-
-        # Concatenate the crops along the batch dimension
-        X = np.concatenate(X_crops, axis=0)
-        labels = np.concatenate(labels_crops, axis=0)
-
-    return X, labels
-
-def data_load_tensors(verbose:bool = True, processing:bool = True, one_hot:bool = False, map_lapels = True, square_size = None, folder_path = "data/11t51center"):
-    """
-    Load data into tensors and perform data processing.
-
-    Args:
-        verbose (bool): Whether to display verbose output.
-        processing (bool): Whether to perform data processing.
-
-    Returns:
-        torch.Tensor: The input data in tensor format.
-        torch.Tensor: The corresponding labels in tensor format.
-    """
-    X, y = data_load_numpy(verbose, processing, square_size=square_size, folder_path=folder_path)
-
-    X, y = torch.tensor(X), torch.tensor(y)
-
-    if map_lapels:
-        class_mapping = {0: 0, 128: 1, 255: 2}
-        mapped_labels = torch.zeros_like(y, dtype=torch.long)
-
-        for original_class, mapped_class in class_mapping.items():
-            mapped_labels[y == original_class] = mapped_class
-
-        y = mapped_labels
-
-        if one_hot:
-            y = torch.nn.functional.one_hot(y, num_classes=3)
-            y = y.permute(0, 3, 1, 2)
-
-    # # Convert X to float
-    X = X.float()
-    return X, y 
 
 def get_transforms(add_gaussian_noise = False, add_jitter = False):
     transforms = []
@@ -295,7 +199,7 @@ def get_normalizer(X):
     return v2.Normalize(mean=mu, std=std)
 
 def get_dataloaders(batch_size:int=15, train_size:float = 0.8, test_size:float = 0.2,seed:int = 42, verbose:bool = True, 
-                    sampling_height = None, sampling_width = None, in_memory = False, static_test = False, 
+                    sampling_height = None, sampling_width = None, in_memory = False, static_test = False, random_sampling_train = False,
                     random_train_test_split=True, folder_path = "data/11t51center", detector = "both", normalize = True, p_flip_horizontal = 0.,
                     add_gaussian_noise = False, add_jitter = False):
 
@@ -332,10 +236,9 @@ def get_dataloaders(batch_size:int=15, train_size:float = 0.8, test_size:float =
         transforms = get_transforms(add_gaussian_noise=add_gaussian_noise, add_jitter=add_jitter)
         normalizer = get_normalizer(X_train)
         
-        train_dataset = InMemoryDataset(X_train, y_train, sampling_height=sampling_height, sampling_width=sampling_width,random_sampling = True, normalizer = normalizer, transforms = transforms, p_flip_horizontal = p_flip_horizontal)
-        test_dataset = InMemoryDataset(X_test, y_test, sampling_height=sampling_height, sampling_width=sampling_width, random_sampling = False, normalizer = normalizer, transforms = transforms)
-        val_dataset = InMemoryDataset(X_val, y_val, sampling_height=sampling_height, sampling_width=sampling_width, random_sampling = False, normalizer = normalizer, transforms = transforms)
-        
+        train_dataset = InMemoryDataset(X_train, y_train, sampling_height=sampling_height, sampling_width=sampling_width,random_sampling = random_sampling_train, normalizer = normalizer, transforms = transforms, p_flip_horizontal = p_flip_horizontal)
+        test_dataset = InMemoryDataset(X_test, y_test, sampling_height=sampling_height, sampling_width=sampling_width, random_sampling = random_sampling_train, normalizer = normalizer, transforms = transforms)
+        val_dataset = InMemoryDataset(X_val, y_val, sampling_height=sampling_height, sampling_width=sampling_width, random_sampling = static_test, normalizer = normalizer, transforms = transforms)
     #TODO: random sampling for this too
     else:
         train_dataset = CustomDataset(train_size = train_size, sampling_height=sampling_height, sampling_width=sampling_width, random_sampling = True, folder_path=folder_path, normalize = normalize, p_flip_horizontal = p_flip_horizontal)

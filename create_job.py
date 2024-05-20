@@ -36,7 +36,9 @@ def main(config):
                 hyper.with_skip_connections={config.hyper.with_skip_connections}
                 
                 data.train_size={config.data.train_size}
+                data.test_size={config.data.test_size}
                 data.in_memory={config.data.in_memory}
+                data.random_sampling_train={config.data.random_sampling_train}
                 data.static_test={config.data.static_test}
                 data.normalize={config.data.normalize}
                 data.p_flip_horizontal={config.data.p_flip_horizontal}
