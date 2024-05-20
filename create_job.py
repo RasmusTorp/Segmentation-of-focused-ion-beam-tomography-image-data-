@@ -35,6 +35,7 @@ def main(config):
                 hyper.n_neurons={config.hyper.n_neurons}
                 hyper.with_skip_connections={config.hyper.with_skip_connections}
                 
+                data.dataset={config.data.dataset}
                 data.train_size={config.data.train_size}
                 data.test_size={config.data.test_size}
                 data.in_memory={config.data.in_memory}
