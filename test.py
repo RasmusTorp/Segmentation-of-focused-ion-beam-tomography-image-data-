@@ -1,26 +1,35 @@
-import subprocess
-from omegaconf import OmegaConf
+# import subprocess
+# from omegaconf import OmegaConf
 import hydra
-import wandb
+# import wandb
 import os
-from dataLoad import get_dataloaders, data_load_tensors
+
+from dataLoad import get_dataloaders
+from loadDataFunctions.load11t51center import data_load_tensors
+from loadDataFunctions.loadMing import load_ming
 from UNET_2D import UNet2D
 import torch
 from plotting_functions.plot_all import plot_all
-from evaluation import calculate_iou, calculate_pixel_accuracy
-from segmentSlice import segment_slice
+# from evaluation import calculate_iou, calculate_pixel_accuracy
+# from segmentSlice import segment_slice
 
 @hydra.main(config_name="config_test.yaml", config_path="./", version_base="1.3")
 def main(config):
     if config.compute.hpc:
-        folder_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir, os.pardir, "data", "data","11t51center"))
+        folder_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir, os.pardir, "data", "data", config.data.dataset))
     
     else: 
-        folder_path = "data/11t51center"
+        folder_path = f"data/{config.data.dataset}"
     
+    
+    if config.data.dataset=="Ming_cell":
+        X, y = load_ming(folder_path)
+        
+    elif config.data.dataset=="11t51center":
+        X, y = data_load_tensors(folder_path=folder_path)
     
         
-    train_loader, test_loader, val_loader = get_dataloaders(batch_size=config.hyper.batch_size, train_size=config.data.train_size,
+    train_loader, test_loader, val_loader = get_dataloaders(X, y, batch_size=config.hyper.batch_size, train_size=config.data.train_size,
                                                 test_size=config.data.test_size, 
                                                 seed=config.constants.seed, sampling_height=config.data.sampling_height, 
                                                 sampling_width=config.data.sampling_width, 
@@ -49,11 +58,11 @@ def main(config):
     
     if config.testing.test_on == "test" and config.testing.plot:
         dataset = test_loader.dataset    
-        plot_all(model, dataset, config.testing.slice, f"withflipping_test")
+        plot_all(model, dataset, config.testing.slice, f"{config.testing.model}_{config.data.dataset}_test")
     
     elif config.testing.test_on == "train" and config.testing.plot:
         dataset = train_loader.dataset
-        plot_all(model, dataset, config.testing.slice, f"withflipping_train")
+        plot_all(model, dataset, config.testing.slice, f"{config.testing.model}_{config.data.dataset}_train")
         
     
     if config.testing.plot_trough_network:
@@ -61,8 +70,7 @@ def main(config):
         x, y  = dataset[config.testing.slice]
         x = x.unsqueeze(0)
         model.eval()
-        model.plot_trough_network(x, save_as=f"trough_network_withflipping_{config.testing.slice}")
-    
+        model.plot_trough_network(x, save_as=f"trough_network_{config.testing.model}_{config.testing.slice}")
     
     if config.testing.evaluate:
         model.evaluate(test_loader)
