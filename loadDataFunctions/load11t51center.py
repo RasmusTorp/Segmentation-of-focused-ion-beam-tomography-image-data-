@@ -84,3 +84,15 @@ def data_load_tensors(verbose:bool = True, processing:bool = True, one_hot:bool 
     # # Convert X to float
     X = X.float()
     return X, y 
+
+
+if __name__ == "__main__":
+    X, y = data_load_tensors()
+    
+    
+    # Count 0, 1 and 2 in y and divide by total number of pixels
+    print(f"Class 0: {torch.sum(y==0).item() / y.numel()}")
+    print(f"Class 1: {torch.sum(y==1).item() / y.numel()}")
+    print(f"Class 2: {torch.sum(y==2).item() / y.numel()}")
+    
+    

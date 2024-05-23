@@ -43,5 +43,11 @@ def load_ming(folder_path):
 
 if __name__ == "__main__":
     X, y = load_ming(folder_path)
-    print(X.shape, y.shape)
-
+    
+    
+    # Count 0, 1 and 2 in y and divide by total number of pixels
+    print(f"Class 0: {torch.sum(y==0).item() / y.numel()}")
+    print(f"Class 1: {torch.sum(y==1).item() / y.numel()}")
+    print(f"Class 2: {torch.sum(y==2).item() / y.numel()}")
+    
+    
