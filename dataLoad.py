@@ -93,8 +93,6 @@ from itertools import product
 class InMemoryDataset(Dataset):
     def __init__(self, X, y, random_sampling = False, sampling_height = None, sampling_width = None, transforms = None, p_flip_horizontal = 0.0):
         
-        
-        #TODO: Generalize for all square sizes
         if not random_sampling and sampling_height:
             # Calculate the starting indices for the crops
             
