@@ -268,7 +268,21 @@ class UNet2D(nn.Module):
         encoder_outs = []
         
         x_original = x
-            
+        
+        fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+        detector1 = x[0][0].detach().numpy()
+        detector2 = x[0][1].detach().numpy()
+        
+        axs[0].imshow(detector1)
+        axs[0].set_title('Detector 1')
+        
+        axs[1].imshow(detector2)
+        axs[1].set_title('Detector 2')
+        
+        plt.tight_layout()
+        plt.savefig(f"plots/{save_as}_input.png")
+        plt.clf()
+        
         for i, layer in enumerate(self.encoder):
             x = layer(x)
             plt.figure(figsize=(9, 7))
@@ -303,19 +317,7 @@ class UNet2D(nn.Module):
         
         encoder_outs = []
         
-        fig, axs = plt.subplots(1, 2, figsize=(10, 5))
-        detector1 = x[0][0].detach().numpy()
-        detector2 = x[0][1].detach().numpy()
         
-        axs[0].imshow(detector1)
-        axs[0].set_title('Detector 1')
-        
-        axs[1].imshow(detector2)
-        axs[1].set_title('Detector 2')
-        
-        plt.tight_layout()
-        plt.savefig(f"plots/{save_as}_input.png")
-        plt.clf()
     
         # In one plot
         x = x_original
