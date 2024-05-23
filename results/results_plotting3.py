@@ -57,5 +57,5 @@ plt.legend()
 # plt.grid(True)
 plt.xticks(percentage)
 
-plt.savefig('plots/performance_over_train_size_combined.pdf', format='pdf')
+plt.savefig('results/performance_over_train_size_combined.pdf', format='pdf')
 
