@@ -38,7 +38,6 @@ def main(config):
         
     elif config.data.dataset=="11t51center":
         X, y = data_load_tensors(folder_path=folder_path)
-    
         
     train_loader, test_loader, val_loader = get_dataloaders(X, y, batch_size=config.hyper.batch_size, train_size=config.data.train_size,
                                                 test_size=config.data.test_size, 
@@ -50,9 +49,9 @@ def main(config):
                                                 detector=config.data.detector, normalize=config.data.normalize,
                                                 p_flip_horizontal=config.data.p_flip_horizontal)
 
+    del X, y # Free up memory
+
     n_channels = 2 if config.data.detector == "both" else 1
-    
-    
     
     model = UNet2D(n_neurons=config.hyper.n_neurons,
                     n_channels=n_channels, 
@@ -72,7 +71,8 @@ def main(config):
     model.train_model(train_loader = train_loader, val_loader=val_loader, epochs=config.hyper.epochs, 
                     lr=config.hyper.lr, patience=config.hyper.patience, track = config.wandb.track, save_as=config.miscellaneous.save_as)
     
-    model.evaluate(test_loader)
+    pixel_accuracy, mean_iou = model.evaluate(test_loader)
+    wandb.track({"pixel_accuracy_test": pixel_accuracy, "mean_iou_test": mean_iou})
     print("done")
     
 if __name__ == "__main__":
