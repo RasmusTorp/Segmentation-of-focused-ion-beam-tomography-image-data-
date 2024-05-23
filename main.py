@@ -72,7 +72,7 @@ def main(config):
                     lr=config.hyper.lr, patience=config.hyper.patience, track = config.wandb.track, save_as=config.miscellaneous.save_as)
     
     pixel_accuracy, mean_iou = model.evaluate(test_loader)
-    wandb.track({"pixel_accuracy_test": pixel_accuracy, "mean_iou_test": mean_iou})
+    wandb.log({"pixel_accuracy_test": pixel_accuracy, "mean_iou_test": mean_iou})
     print("done")
     
 if __name__ == "__main__":
