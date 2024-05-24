@@ -4,8 +4,8 @@
 secret.txt
 *.png
 /wandb
-*.yaml
 *.log
+/outputs
 /saved_models
 transferModelCommand.txt
 *.pdf

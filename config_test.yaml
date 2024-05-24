@@ -1,0 +1,43 @@
+hyper:
+  lr: 0.001
+  epochs: 100
+  batch_size: 15
+  n_neurons: 64  
+  with_skip_connections: True
+  n_depth: 3
+  patience: 100
+data:
+  dataset: "11t51center"
+  train_size: 0.5
+  test_size: 0.2
+  in_memory: True
+  static_test: True
+  normalize: True
+  p_flip_horizontal: 0.5
+  sampling_height: 272
+  sampling_width: 448
+  random_train_test_split: True
+  detector: "both"
+compute:
+  hpc: False
+testing:
+  slice: 300
+  plot: False
+  test_on: "test"
+  plot_trough_network: False
+  evaluate: True
+  model: "misty_sun_17.pth"
+constants:
+  seed: 42
+  n_classes: 3
+wandb:
+  track: False
+  project: "ionbeam"
+  entity: "rasmustorp-ai"
+bsub:
+  queue: "gpua100"
+  name: "ionbeam"
+  gpu_num: 1
+  cpu_num: 4
+  cpu_mem: 4
+
