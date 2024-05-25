@@ -82,7 +82,7 @@ def calculate_iou(pred, target, num_classes=3):
 #     total = target.numel()  # Get total number of pixels
 #     return phase_0.float()/total, phase_1.float()/total, phase_2.float()/total  # Return phase fractions
 
-def evaluate_model(pred, target, print_values = True, return_values = False):
+def evaluate_model(pred, target, print_values = True):
     pixel_accuracy = calculate_pixel_accuracy(pred, target)
     mean_iou = calculate_iou(pred, target)
 
