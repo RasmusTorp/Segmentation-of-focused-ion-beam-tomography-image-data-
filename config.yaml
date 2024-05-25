@@ -1,21 +1,21 @@
 hyper:
   lr: 0.001
   epochs: 100
-  batch_size: 50
+  batch_size: 35
   n_neurons: 64  
   with_skip_connections: True
   n_depth: 3
   patience: 100
+  hotstart_model: False
 data:
+  dataset: "11t51center"
   train_size: 0.2
   test_size: 0.2
   in_memory: True
   random_sampling_train: True
   static_test: True
-  normalize: True
+  normalize: True 
   p_flip_horizontal: 0.0
-  add_gaussian_noise: True
-  add_jitter: False
   sampling_height: 272
   sampling_width: 448
   random_train_test_split: True
@@ -23,7 +23,7 @@ data:
 compute:
   hpc: False
 miscellaneous:
-  save_as: "test_model.pth"
+  save_as: "NoModelName"
 constants:
   seed: 42
   n_classes: 3
