@@ -10,6 +10,7 @@ from loadDataFunctions.loadMing import load_ming
 from UNET_2D import UNet2D
 import torch
 from plotting_functions.plot_all import plot_all
+from evaluation.stat_comparison import compare_models
 # from evaluation import calculate_iou, calculate_pixel_accuracy
 # from segmentSlice import segment_slice
 
@@ -41,7 +42,7 @@ def main(config):
 
     n_channels = 2 if config.data.detector == "both" else 1
     
-    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     model = UNet2D(n_neurons=config.hyper.n_neurons,
                     n_channels=n_channels, 
@@ -71,6 +72,20 @@ def main(config):
         x = x.unsqueeze(0)
         model.eval()
         model.plot_trough_network(x, save_as=f"trough_network_{config.testing.model}_{config.testing.slice}")
+    
+    if config.testing.compare_with:
+        model2 = UNet2D(n_neurons=config.hyper.n_neurons,
+                    n_channels=n_channels, 
+                    n_classes=config.constants.n_classes,
+                    n_depth=config.testing.compare_with_depth,
+                    with_skip_connections=config.hyper.with_skip_connections)
+        
+        
+        model2.load_model(f"saved_models/{config.testing.compare_with}", map_location=torch.device('cpu'))
+        
+        print(f"Comparing models {config.testing.model} and {config.testing.compare_with}:")
+        compare_models(model, model2, test_loader, device)
+    
     
     if config.testing.evaluate:
         model.evaluate(test_loader)

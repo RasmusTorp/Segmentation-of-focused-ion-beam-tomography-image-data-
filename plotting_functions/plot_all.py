@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import torch
 import numpy as np
-from evaluation import calculate_iou, calculate_pixel_accuracy
+from evaluation.evaluation import calculate_iou, calculate_pixel_accuracy
 
 
 def plot_all(model, testSet, slice, save_as):

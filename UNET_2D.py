@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from utils import get_device
-from evaluation import evaluate_model
+from evaluation.evaluation import evaluate_model
 import numpy as np
 import wandb
 import matplotlib.pyplot as plt
