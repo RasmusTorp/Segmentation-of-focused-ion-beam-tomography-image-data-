@@ -44,7 +44,7 @@ def main(config):
                 data.detector={config.data.detector}
                 
                 dataAug.normalize={config.dataAug.normalize}
-                dataAug.random_sampling_train={config.data.random_sampling_train}
+                dataAug.random_sampling_train={config.dataAug.random_sampling_train}
                 dataAug.p_flip_horizontal={config.dataAug.p_flip_horizontal}
                 dataAug.sampling_height={config.dataAug.sampling_height}
                 dataAug.sampling_width={config.dataAug.sampling_width}
