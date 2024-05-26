@@ -35,7 +35,7 @@ def main(config):
                                                 seed=config.constants.seed, sampling_height=config.data.sampling_height, 
                                                 sampling_width=config.data.sampling_width, 
                                                 in_memory=config.data.in_memory, 
-                                                static_test=config.data.static_test, folder_path=folder_path,
+                                                static_test=config.data.static_test,
                                                 random_train_test_split=config.data.random_train_test_split,
                                                 detector=config.data.detector, normalize=config.data.normalize,
                                                 p_flip_horizontal=config.data.p_flip_horizontal)
