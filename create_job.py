@@ -41,14 +41,16 @@ def main(config):
                 data.test_size={config.data.test_size}
                 data.in_memory={config.data.in_memory}
                 data.static_test={config.data.static_test}
+                data.random_train_test_split={config.data.random_train_test_split}
                 data.detector={config.data.detector}
+                
                 
                 dataAug.normalize={config.dataAug.normalize}
                 dataAug.random_sampling_train={config.dataAug.random_sampling_train}
                 dataAug.p_flip_horizontal={config.dataAug.p_flip_horizontal}
                 dataAug.sampling_height={config.dataAug.sampling_height}
                 dataAug.sampling_width={config.dataAug.sampling_width}
-                dataAug.random_train_test_split={config.dataAug.random_train_test_split}
+                
                 gaussian_kernel_size={config.dataAug.gaussian_kernel_size}
                 gaussian_sigma={config.dataAug.gaussian_sigma}
                 
