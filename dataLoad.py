@@ -91,7 +91,7 @@ from itertools import product
 #         return X, y
 
 class InMemoryDataset(Dataset):
-    def __init__(self, X, y, random_sampling = False, sampling_height = None, sampling_width = None, transforms = None, p_flip_horizontal = 0.0):
+    def __init__(self, X, y, random_sampling = False, sampling_height = None, sampling_width = None, normalizer = None, p_flip_horizontal = 0.0, transforms = None):
         
         if not random_sampling and sampling_height:
             # Calculate the starting indices for the crops
@@ -132,6 +132,7 @@ class InMemoryDataset(Dataset):
         self.random_sampling = random_sampling
     
         self.transforms = transforms
+        self.normalizer = normalizer
         self.p_flip_horizontal = p_flip_horizontal
     
         # self.normalize = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -162,6 +163,9 @@ class InMemoryDataset(Dataset):
             
         if self.transforms:
             X_i = self.transforms(X_i)
+            
+        if self.normalizer:
+            X_i = self.normalizer(X_i)
         
         if flip_horizontal:
             x_channels = X_i.shape[0]
@@ -171,19 +175,29 @@ class InMemoryDataset(Dataset):
         return X_i, y_i
 
 
-def get_transforms(X, normalize = True):
+def get_transforms(gaussian_kernel_size, gaussian_sigma, brightness, contrast):
     transforms = []
-    
-    if normalize:
-        mu = X.mean(axis=(0, 2, 3)).tolist()
-        std = X.std(axis=(0, 2, 3)).tolist()
-        transforms.append(v2.Normalize(mean=mu, std=std))
         
+    if gaussian_kernel_size:
+        transforms.append(v2.GaussianBlur(kernel_size=gaussian_kernel_size, sigma = (0.001, gaussian_sigma)))
+        
+    if brightness or contrast:
+        transforms.append(v2.ColorJitter(brightness=brightness, contrast=contrast))
+    
+    if not transforms:
+        return None
+    
     return v2.Compose(transforms)
+
+def get_normalizer(X):
+    mu = X.mean(axis=(0, 2, 3)).tolist()
+    std = X.std(axis=(0, 2, 3)).tolist()
+    return v2.Normalize(mean=mu, std=std)
 
 def get_dataloaders(X, y, batch_size:int=15, train_size:float = 0.8, test_size:float = 0.2,seed:int = 42, verbose:bool = True, 
                     sampling_height = None, sampling_width = None, in_memory = False, static_test = False, random_sampling_train = False,
-                    random_train_test_split=True, folder_path = "data/11t51center", detector = "both", normalize = True, p_flip_horizontal = 0.):
+                    random_train_test_split=True, folder_path = "data/11t51center", detector = "both", normalize = True, p_flip_horizontal = 0.
+                    , gaussian_kernel_size=0, gaussian_sigma=0,brightness=0., contrast=0.):
 
     
     
@@ -212,16 +226,17 @@ def get_dataloaders(X, y, batch_size:int=15, train_size:float = 0.8, test_size:f
         X_val = torch.tensor(X_val)
         y_val = torch.tensor(y_val) 
         
-        # transforms = get_transforms(X_train, normalize = normalize, p_flip_horizontal = p_flip_horizontal)
-        transforms = get_transforms(X_train, normalize=normalize)
-        
     else:
         train_size = int(train_size * len(X))   
         X_train, y_train = X[:train_size], y[:train_size]
         X_test, y_test = X[train_size:], y[train_size:]
-    train_dataset = InMemoryDataset(X_train, y_train, sampling_height=sampling_height, sampling_width=sampling_width,random_sampling = random_sampling_train, transforms = transforms, p_flip_horizontal = p_flip_horizontal)
-    test_dataset = InMemoryDataset(X_test, y_test, sampling_height=sampling_height, sampling_width=sampling_width, random_sampling = static_test, transforms = transforms)
-    val_dataset = InMemoryDataset(X_val, y_val, sampling_height=sampling_height, sampling_width=sampling_width, random_sampling = static_test, transforms = transforms)
+    
+    normalizer = get_normalizer(X_train)
+    transforms = get_transforms(gaussian_kernel_size, gaussian_sigma, brightness, contrast)
+    
+    train_dataset = InMemoryDataset(X_train, y_train, sampling_height=sampling_height, sampling_width=sampling_width,random_sampling = random_sampling_train,normalizer=normalizer, transforms = transforms, p_flip_horizontal = p_flip_horizontal)
+    test_dataset = InMemoryDataset(X_test, y_test, sampling_height=sampling_height, sampling_width=sampling_width, random_sampling = static_test,normalizer=normalizer, transforms = None)
+    val_dataset = InMemoryDataset(X_val, y_val, sampling_height=sampling_height, sampling_width=sampling_width, random_sampling = static_test, normalizer=normalizer, transforms = None)
     
     # #TODO: random sampling for this too
     # else:

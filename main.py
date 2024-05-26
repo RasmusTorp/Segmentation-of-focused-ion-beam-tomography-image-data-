@@ -41,13 +41,14 @@ def main(config):
         
     train_loader, test_loader, val_loader = get_dataloaders(X, y, batch_size=config.hyper.batch_size, train_size=config.data.train_size,
                                                 test_size=config.data.test_size, 
-                                                seed=config.constants.seed, sampling_height=config.data.sampling_height, 
-                                                sampling_width=config.data.sampling_width, 
+                                                seed=config.constants.seed, sampling_height=config.dataAug.sampling_height, 
+                                                sampling_width=config.dataAug.sampling_width, 
                                                 in_memory=config.data.in_memory, 
                                                 static_test=config.data.static_test, folder_path=folder_path,
                                                 random_train_test_split=config.data.random_train_test_split,
-                                                detector=config.data.detector, normalize=config.data.normalize,
-                                                p_flip_horizontal=config.data.p_flip_horizontal)
+                                                detector=config.data.detector, normalize=config.dataAug.normalize,
+                                                p_flip_horizontal=config.dataAug.p_flip_horizontal, gaussian_kernel_size=config.dataAug.gaussian_kernel_size,
+                                                gaussian_sigma=config.dataAug.gaussian_sigma)
 
     del X, y # Free up memory
 

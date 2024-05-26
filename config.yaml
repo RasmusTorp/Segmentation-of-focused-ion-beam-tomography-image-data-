@@ -12,14 +12,17 @@ data:
   train_size: 0.2
   test_size: 0.2
   in_memory: True
-  random_sampling_train: True
   static_test: True
-  normalize: True
-  p_flip_horizontal: 0.0
-  sampling_height: 272
-  sampling_width: 448
   random_train_test_split: True
   detector: "both"
+dataAug:
+  p_flip_horizontal: 0.0
+  random_sampling_train: True
+  sampling_height: 272
+  sampling_width: 448
+  normalize: True
+  gaussian_kernel_size: 5
+  gaussian_sigma: 2.0
 compute:
   hpc: False
 miscellaneous:

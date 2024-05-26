@@ -42,12 +42,15 @@ def main(config):
                 data.in_memory={config.data.in_memory}
                 data.random_sampling_train={config.data.random_sampling_train}
                 data.static_test={config.data.static_test}
-                data.normalize={config.data.normalize}
-                data.p_flip_horizontal={config.data.p_flip_horizontal}
-                data.sampling_height={config.data.sampling_height}
-                data.sampling_width={config.data.sampling_width}
-                data.random_train_test_split={config.data.random_train_test_split}
                 data.detector={config.data.detector}
+                
+                dataAug.normalize={config.dataAug.normalize}
+                dataAug.p_flip_horizontal={config.dataAug.p_flip_horizontal}
+                dataAug.sampling_height={config.dataAug.sampling_height}
+                dataAug.sampling_width={config.dataAug.sampling_width}
+                dataAug.random_train_test_split={config.dataAug.random_train_test_split}
+                gaussian_kernel_size={config.dataAug.gaussian_kernel_size}
+                gaussian_sigma={config.dataAug.gaussian_sigma}
                 
                 compute.hpc={config.compute.hpc}
                 
