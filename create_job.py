@@ -50,9 +50,8 @@ def main(config):
                 dataAug.p_flip_horizontal={config.dataAug.p_flip_horizontal}
                 dataAug.sampling_height={config.dataAug.sampling_height}
                 dataAug.sampling_width={config.dataAug.sampling_width}
-                
-                gaussian_kernel_size={config.dataAug.gaussian_kernel_size}
-                gaussian_sigma={config.dataAug.gaussian_sigma}
+                dataAug.gaussian_kernel_size={config.dataAug.gaussian_kernel_size}
+                dataAug.gaussian_sigma={config.dataAug.gaussian_sigma}
                 
                 compute.hpc={config.compute.hpc}
                 
