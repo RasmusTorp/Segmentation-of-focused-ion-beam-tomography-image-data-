@@ -40,11 +40,11 @@ def main(config):
                 data.train_size={config.data.train_size}
                 data.test_size={config.data.test_size}
                 data.in_memory={config.data.in_memory}
-                data.random_sampling_train={config.data.random_sampling_train}
                 data.static_test={config.data.static_test}
                 data.detector={config.data.detector}
                 
                 dataAug.normalize={config.dataAug.normalize}
+                data.random_sampling_train={config.data.random_sampling_train}
                 dataAug.p_flip_horizontal={config.dataAug.p_flip_horizontal}
                 dataAug.sampling_height={config.dataAug.sampling_height}
                 dataAug.sampling_width={config.dataAug.sampling_width}
