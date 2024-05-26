@@ -113,7 +113,6 @@ class UNet2D(nn.Module):
         self.final_conv = nn.Conv2d(in_channels=n_neurons, out_channels=self.n_classes, kernel_size=1)
 
     def forward(self, x):
-        
         if not self.with_skip_connections:
             x = self.encoder(x)
             x = self.decoder(x)
@@ -133,6 +132,7 @@ class UNet2D(nn.Module):
             
         return x
     
+    # Method used to get the segmentation of the input
     def to_segmentation(self, x):
         x = self.forward(x)
         return x.argmax(dim=1)
@@ -227,8 +227,6 @@ class UNet2D(nn.Module):
         avg_loss = total_loss / loss_calculated
         return avg_loss
 
-
-    #TODO: Fix evaluation function and put it in a separate file
     def evaluate(self, test_loader):
         self.to(self.device)
         self.eval()
@@ -244,7 +242,7 @@ class UNet2D(nn.Module):
             all_outputs = torch.cat(all_outputs, dim=0)
             all_targets = torch.cat(all_targets, dim=0)
 
-            pixel_accuracy, mean_iou = evaluate_model(all_outputs, all_targets, return_values=True, print_values=False)
+            pixel_accuracy, mean_iou = evaluate_model(all_outputs, all_targets, print_values=False)
             print(f'Pixel accuracy: {pixel_accuracy.item()}, Mean IoU: {mean_iou.item()}')
             return pixel_accuracy, mean_iou
             
@@ -262,7 +260,7 @@ class UNet2D(nn.Module):
 
             self.load_state_dict(state_dict)
 
-    # Method used exclusively for debugging and visualization
+    # Method used exclusively for debugging and visualization for the report
     def plot_trough_network(self, x, save_as):
         self.eval()
         encoder_outs = []
@@ -316,7 +314,6 @@ class UNet2D(nn.Module):
         plt.clf()
         
         encoder_outs = []
-        
         
     
         # In one plot
