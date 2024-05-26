@@ -21,8 +21,8 @@ dataAug:
   sampling_height: 272
   sampling_width: 448
   normalize: True
-  gaussian_kernel_size: 5
-  gaussian_sigma: 2.0
+  gaussian_kernel_size: 0
+  gaussian_sigma: 0.
 compute:
   hpc: False
 miscellaneous:
