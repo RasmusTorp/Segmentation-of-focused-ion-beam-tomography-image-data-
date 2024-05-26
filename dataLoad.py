@@ -194,10 +194,10 @@ def get_normalizer(X):
     std = X.std(axis=(0, 2, 3)).tolist()
     return v2.Normalize(mean=mu, std=std)
 
-def get_dataloaders(X, y, batch_size:int=15, train_size:float = 0.8, test_size:float = 0.2,seed:int = 42, verbose:bool = True, 
-                    sampling_height = None, sampling_width = None, in_memory = False, static_test = False, random_sampling_train = False,
-                    random_train_test_split=True, folder_path = "data/11t51center", detector = "both", normalize = True, p_flip_horizontal = 0.
-                    , gaussian_kernel_size=0, gaussian_sigma=0,brightness=0., contrast=0.):
+def get_dataloaders(X, y, batch_size:int=15, train_size:float = 0.8, test_size:float = 0.2,seed:int = 42, 
+                    sampling_height = None, sampling_width = None, in_memory = False, static_test = False, random_sampling_train = True,
+                    random_train_test_split=True, detector = "both", normalize = True, p_flip_horizontal = 0.
+                    ,gaussian_kernel_size=0, gaussian_sigma=0,brightness=0., contrast=0.):
 
     
     
