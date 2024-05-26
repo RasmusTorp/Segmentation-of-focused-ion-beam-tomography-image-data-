@@ -24,8 +24,8 @@ testing:
   slice: 50
   plot: False
   test_on: "test"
-  plot_trough_network: True
-  evaluate: False
+  plot_trough_network: False
+  evaluate: True
   model: "70depth3"
   compare_with: False
   compare_with_depth: False
