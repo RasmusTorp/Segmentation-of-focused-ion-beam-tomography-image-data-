@@ -21,14 +21,14 @@ data:
 compute:
   hpc: False
 testing:
-  slice: 300
+  slice: 50
   plot: False
   test_on: "test"
-  plot_trough_network: False
+  plot_trough_network: True
   evaluate: False
   model: "70depth3"
-  compare_with: "70depth2"
-  compare_with_depth: 2
+  compare_with: False
+  compare_with_depth: False
 constants:
   seed: 42
   n_classes: 3
