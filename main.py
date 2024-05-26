@@ -45,7 +45,7 @@ def main(config):
                                                 sampling_width=config.dataAug.sampling_width, 
                                                 in_memory=config.data.in_memory, 
                                                 static_test=config.data.static_test, folder_path=folder_path,
-                                                random_train_test_split=config.data.random_train_test_split,
+                                                random_train_test_split=config.dataAug.random_train_test_split,
                                                 detector=config.data.detector, normalize=config.dataAug.normalize,
                                                 p_flip_horizontal=config.dataAug.p_flip_horizontal, gaussian_kernel_size=config.dataAug.gaussian_kernel_size,
                                                 gaussian_sigma=config.dataAug.gaussian_sigma)
