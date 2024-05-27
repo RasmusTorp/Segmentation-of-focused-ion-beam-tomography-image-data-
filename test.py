@@ -80,9 +80,7 @@ def main(config):
                     n_depth=config.testing.compare_with_depth,
                     with_skip_connections=config.hyper.with_skip_connections)
         
-        
-        model2.load_model(f"saved_models/{config.testing.compare_with}", map_location=torch.device('cpu'))
-        
+        model2.load_model(f"saved_models/{config.testing.compare_with}", map_location=torch.device('cuda') if torch.cuda.is_available() else 'cpu')
         print(f"Comparing models {config.testing.model} and {config.testing.compare_with}:")
         compare_models(model, model2, test_loader, device)
     
