@@ -19,8 +19,8 @@ def compare_models(model1, model2, test_loader, device):
             y_pred1 = model1.to_segmentation(X)
             y_pred2 = model2.to_segmentation(X)
             
-            pix1, iou1 = evaluate_model(y_pred1, y)
-            pix2, iou2 = evaluate_model(y_pred2, y)
+            pix1, iou1 = evaluate_model(y_pred1, y, print_values=False)
+            pix2, iou2 = evaluate_model(y_pred2, y, print_values=False)
             pix1, iou1 = pix1.item(), iou1.item()
             pix2, iou2 = pix2.item(), iou2.item()
             
