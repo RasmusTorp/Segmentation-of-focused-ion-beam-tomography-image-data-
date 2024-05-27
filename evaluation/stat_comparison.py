@@ -15,6 +15,7 @@ def compare_models(model1, model2, test_loader, device):
     
     for i, (X, y) in enumerate(test_loader):
         with torch.no_grad():
+            X, y = X.to(device), y.to(device)
             y_pred1 = model1.to_segmentation(X)
             y_pred2 = model2.to_segmentation(X)
             
