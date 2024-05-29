@@ -24,10 +24,10 @@ val_loss2 = pd.read_csv(f"results/{model_name_2}_val_loss.csv").iloc[:,1]
 
 # Plot acc1, acc2 and iou1, iou2
 plt.figure(figsize=(10, 5))
-plt.plot(acc1, label='Accuracy: Model 1', linestyle='-', color='blue')
-plt.plot(iou1, label='IOU: Model 1', linestyle='-', color='green')
-plt.plot(acc2, label='Accuracy: Model 2', linestyle='--', color='blue')
-plt.plot(iou2, label='IOU: Model 2', linestyle='--', color='green')
+plt.plot(acc1, label='Accuracy: Model 1', linestyle='-', color='green')
+plt.plot(iou1, label='IOU: Model 1', linestyle='-', color='blue')
+plt.plot(acc2, label='Accuracy: Model 2', linestyle='--', color='green')
+plt.plot(iou2, label='IOU: Model 2', linestyle='--', color='blue')
 plt.title('Accuracy and IOU Through Training Epochs')
 plt.xlabel('Epoch')
 plt.ylabel('Value')
@@ -36,9 +36,9 @@ plt.savefig(f"results/{model_name_1}_{model_name_2}_acc_iou.pdf", format="pdf")
 
 # Plot train_loss1, val_loss1 and train_loss2, val_loss2
 plt.figure(figsize=(10, 5))
-plt.plot(train_loss1, label='Train Loss: Model 1', linestyle='-', color='orange')
+plt.plot(train_loss1, label='Train Loss: Model 1', linestyle='-', color='red')
 plt.plot(val_loss1, label='Validation Loss: Model 1', linestyle='-', color='blue')
-plt.plot(train_loss2, label='Train Loss: Model 2', linestyle='--', color='orange')
+plt.plot(train_loss2, label='Train Loss: Model 2', linestyle='--', color='red')
 plt.plot(val_loss2, label='Validation Loss: Model 2', linestyle='--', color='blue')
 plt.title('Train Loss and Validation Loss Through Training Epochs')
 plt.xlabel('Epoch')
