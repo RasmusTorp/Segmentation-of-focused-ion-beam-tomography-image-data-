@@ -71,12 +71,16 @@ def main(config):
     
     
     model.train_model(train_loader = train_loader, val_loader=val_loader, epochs=config.hyper.epochs, 
-                    lr=config.hyper.lr, patience=config.hyper.patience, track = config.wandb.track, save_as=config.miscellaneous.save_as)
+                    lr=config.hyper.lr, patience=config.hyper.patience, track = config.wandb.track, save_as=config.miscellaneous.save_as
+                    , evaluate_freq=config.hyper.evaluate_freq)
+    
     
     pixel_accuracy, mean_iou = model.evaluate(test_loader)
     if config.wandb.track:
         wandb.log({"pixel_accuracy_test": pixel_accuracy, "mean_iou_test": mean_iou})
     print("done")
+    
+    
     
 if __name__ == "__main__":
     main()

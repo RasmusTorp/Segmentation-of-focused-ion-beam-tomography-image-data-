@@ -35,6 +35,7 @@ def main(config):
                 hyper.n_neurons={config.hyper.n_neurons}
                 hyper.with_skip_connections={config.hyper.with_skip_connections}
                 hyper.hotstart_model={config.hyper.hotstart_model}
+                hyper.evaluate_freq={config.hyper.evaluate_freq}
                 
                 data.dataset={config.data.dataset}
                 data.train_size={config.data.train_size}

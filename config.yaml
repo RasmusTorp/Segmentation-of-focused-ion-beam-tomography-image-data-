@@ -7,6 +7,7 @@ hyper:
   n_depth: 3
   patience: 100
   hotstart_model: False
+  evaluate_freq: 1
 data:
   dataset: "11t51center"
   train_size: 0.2

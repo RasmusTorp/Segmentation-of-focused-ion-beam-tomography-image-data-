@@ -138,7 +138,7 @@ class UNet2D(nn.Module):
         return x.argmax(dim=1)
 
     def train_model(self, train_loader, val_loader = None, optimizer = "adam", lr = 0.001
-                    ,criterion = "crossentropy", epochs = 10, verbose=2, patience=5, save_as="best_model.pth", track = False):
+                    ,criterion = "crossentropy", epochs = 10, verbose=2, patience=5, save_as="best_model.pth", track = False, evaluate_freq = 1):
         
         self.to(self.device)
     
@@ -188,7 +188,7 @@ class UNet2D(nn.Module):
             if track:
                 wandb.log({"train_loss": total_loss / loss_calculated})
 
-            if val_loader:
+            if val_loader and epoch % evaluate_freq == 0:
                 val_loss = self.get_avg_loss(val_loader)
                 pixel_accuracy, mean_iou = self.evaluate(val_loader)
                 print(f'Validation loss: {val_loss}')
@@ -208,6 +208,9 @@ class UNet2D(nn.Module):
                     if no_improve_epochs >= patience:
                         print("Early stopping")
                         return
+                    
+        # Load the best model
+        self.load_model(save_as, map_location=self.device)
 
 
     def get_avg_loss(self, data_loader):
