@@ -210,7 +210,7 @@ class UNet2D(nn.Module):
                         return
                     
         # Load the best model
-        self.load_model(save_as, map_location=self.device)
+        self.load_model(f"saved_models/{save_as}", map_location=self.device)
 
 
     def get_avg_loss(self, data_loader):
