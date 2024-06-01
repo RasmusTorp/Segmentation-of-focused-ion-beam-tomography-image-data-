@@ -4,6 +4,9 @@
 secret.txt
 *.png
 /wandb
-*.yaml
-*.pth
 *.log
+/outputs
+/saved_models
+transferModelCommand.txt
+*.pdf
+*.csv

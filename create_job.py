@@ -20,17 +20,49 @@ def main(config):
                 -n {config.bsub.cpu_num}
                 -R "rusage[mem={config.bsub.cpu_mem}GB]"
                 -R "span[hosts=1]"
-                -W 24:00
+                -W 2:00
                 -B 
                 -N 
                 -o lsf_logs/gpu_%J.out
                 -e lsf_logs/gpu_%J.err
                 -env "all" 
-                python3 train.py
+                python3 main.py
                 hyper.lr={config.hyper.lr} 
                 hyper.epochs={config.hyper.epochs}
                 hyper.batch_size={config.hyper.batch_size}
-                hyper.hidden_dim={config.hyper.hidden_dim}
+                hyper.n_depth={config.hyper.n_depth}
+                hyper.patience={config.hyper.patience}
+                hyper.n_neurons={config.hyper.n_neurons}
+                hyper.with_skip_connections={config.hyper.with_skip_connections}
+                hyper.hotstart_model={config.hyper.hotstart_model}
+                hyper.evaluate_freq={config.hyper.evaluate_freq}
+                
+                data.dataset={config.data.dataset}
+                data.train_size={config.data.train_size}
+                data.test_size={config.data.test_size}
+                data.in_memory={config.data.in_memory}
+                data.static_test={config.data.static_test}
+                data.random_train_test_split={config.data.random_train_test_split}
+                data.detector={config.data.detector}
+                
+                
+                dataAug.normalize={config.dataAug.normalize}
+                dataAug.random_sampling_train={config.dataAug.random_sampling_train}
+                dataAug.p_flip_horizontal={config.dataAug.p_flip_horizontal}
+                dataAug.sampling_height={config.dataAug.sampling_height}
+                dataAug.sampling_width={config.dataAug.sampling_width}
+                dataAug.gaussian_kernel_size={config.dataAug.gaussian_kernel_size}
+                dataAug.gaussian_sigma={config.dataAug.gaussian_sigma}
+                
+                compute.hpc={config.compute.hpc}
+                
+                miscellaneous.save_as={config.miscellaneous.save_as}
+                
+                constants.seed={config.constants.seed}
+                constants.n_classes={config.constants.n_classes}
+                
+                wandb.track={config.wandb.track}
+                
                 """
     command = command.replace("\n", " ")
     command = " ".join(command.split())
