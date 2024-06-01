@@ -3,11 +3,16 @@ from omegaconf import OmegaConf
 import hydra
 import wandb
 import os
+import torch
+
 from dataLoad import get_dataloaders
 from UNET_2D import UNet2D
 from loadDataFunctions.loadMing import load_ming
 from loadDataFunctions.load11t51center import data_load_tensors
-import torch
+from dataAugmentation import DataAugmentation
+
+
+
 
 with open("secret.txt", "r") as f:
     os.environ['WANDB_API_KEY'] = f.read().strip()
@@ -39,17 +44,20 @@ def main(config):
     elif config.data.dataset=="11t51center":
         X, y = data_load_tensors(folder_path=folder_path)
         
+    dataAugmentations = DataAugmentation(gaussian_kernel_size=config.dataAug.gaussian_kernel_size,gaussian_sigma=config.dataAug.gaussian_sigma,
+                                        brightness=config.dataAug.brightness, contrast=config.dataAug.contrast, p_flip_horizontal=config.dataAug.p_flip_horizontal,
+                                        sampling_width=config.dataAug.sampling_width, sampling_height=config.dataAug.sampling_height, 
+                                        random_sampling_train=config.dataAug.random_sampling_train)
+        
+    
     train_loader, test_loader, val_loader = get_dataloaders(X, y, batch_size=config.hyper.batch_size, train_size=config.data.train_size,
                                                 test_size=config.data.test_size, 
                                                 seed=config.constants.seed, sampling_height=config.dataAug.sampling_height, 
                                                 sampling_width=config.dataAug.sampling_width, 
-                                                in_memory=config.data.in_memory, 
                                                 static_test=config.data.static_test,
                                                 random_train_test_split=config.data.random_train_test_split,
-                                                random_sampling_train=config.dataAug.random_sampling_train,
-                                                detector=config.data.detector, normalize=config.dataAug.normalize,
-                                                p_flip_horizontal=config.dataAug.p_flip_horizontal, gaussian_kernel_size=config.dataAug.gaussian_kernel_size,
-                                                gaussian_sigma=config.dataAug.gaussian_sigma)
+                                                detector=config.data.detector,
+                                                dataAugmentations=dataAugmentations)
 
     del X, y # Free up memory
 

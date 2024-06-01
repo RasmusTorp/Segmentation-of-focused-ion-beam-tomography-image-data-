@@ -1,20 +1,10 @@
-import matplotlib.pyplot as plt
 import torch
+import torchvision.transforms as v2
 
-def plot_slice(img, i, channel, show = True, save_as = False):
-    plt.imshow(img[i, channel, :, :])
-
-    if show:
-        plt.show()
-
-    if save_as:
-        plt.savefig("plots/" + save_as)
-
-def plot_label(img, slice_number):
-    plt.imshow(img[slice_number])
-
-def plot_slider(channel):
-    pass
+def get_normalizer(X):
+    mu = X.mean(axis=(0, 2, 3)).tolist()
+    std = X.std(axis=(0, 2, 3)).tolist()
+    return v2.Normalize(mean=mu, std=std)
 
 def get_device():
     if torch.cuda.is_available():
