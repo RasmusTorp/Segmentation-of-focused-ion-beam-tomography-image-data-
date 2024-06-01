@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import torch
 from torch.utils.data.dataset import Dataset, random_split, TensorDataset
 from torch.utils.data import DataLoader
+from dataAugmentation import get_transforms, get_normalizer
 from sklearn.model_selection import train_test_split
 from torchvision.transforms import v2
 from itertools import product
@@ -174,25 +175,6 @@ class InMemoryDataset(Dataset):
             
         return X_i, y_i
 
-
-def get_transforms(gaussian_kernel_size, gaussian_sigma, brightness, contrast):
-    transforms = []
-        
-    if gaussian_kernel_size:
-        transforms.append(v2.GaussianBlur(kernel_size=gaussian_kernel_size, sigma = (0.001, gaussian_sigma)))
-        
-    if brightness or contrast:
-        transforms.append(v2.ColorJitter(brightness=brightness, contrast=contrast))
-    
-    if not transforms:
-        return None
-    
-    return v2.Compose(transforms)
-
-def get_normalizer(X):
-    mu = X.mean(axis=(0, 2, 3)).tolist()
-    std = X.std(axis=(0, 2, 3)).tolist()
-    return v2.Normalize(mean=mu, std=std)
 
 def get_dataloaders(X, y, batch_size:int=15, train_size:float = 0.8, test_size:float = 0.2,seed:int = 42, 
                     sampling_height = None, sampling_width = None, in_memory = False, static_test = False, random_sampling_train = True,
