@@ -33,6 +33,12 @@ def compare_models(model1, model2, test_loader, device):
     pixel_accuracy2 = np.array(pixel_accuracy2)
     IOU1 = np.array(IOU1)
     IOU2 = np.array(IOU2)
+    
+    print(f"Pixel accuracy model 1: {pixel_accuracy1.mean()}, Pixel accuracy model 2: {pixel_accuracy2.mean()}")
+    print(f"IOU model 1: {IOU1.mean()}, IOU model 2: {IOU2.mean()}")
+    print(f"Pixel accuracy model 1 std: {pixel_accuracy1.std()}, Pixel accuracy model 2 std: {pixel_accuracy2.std()}")
+    print(f"IOU model 1 std: {IOU1.std()}, IOU model 2 std: {IOU2.std()}")
+    
     t_stat_pixel, p_value_pixel = stats.ttest_rel(pixel_accuracy1, pixel_accuracy2)
     t_stat_iou, p_value_iou = stats.ttest_rel(IOU1, IOU2)
     
