@@ -40,7 +40,7 @@ class DataAugmentation:
     #! Only works for images with 255 int representation
     def brightness_augmentation(self, X):
         brightness_factor = 1 + torch.empty(1).uniform_(-self.brightness, self.brightness).item()
-        # brightness_factor = 0.5
+        # brightness_factor = 1.5
         X = X / 255
         augmented = F.adjust_brightness(X, brightness_factor=brightness_factor)
         return augmented * 255
@@ -49,12 +49,12 @@ class DataAugmentation:
     #! Only works for images with 255 int representations
     def contrast_augmentation(self, X):
         contrast_factor = 1 + torch.empty(1).uniform_(-self.contrast, self.contrast).item()
-        # contrast_factor = 1.5
+        # contrast_factor = 0.5
         X = X / 255
         augmented = F.adjust_contrast(X, contrast_factor=contrast_factor)
         return augmented * 255
 
-    
+    # Performs the augmentations
     def __call__(self, X, y):
         
         # Random cropping
@@ -82,8 +82,8 @@ class DataAugmentation:
     # Only used for a plot in the report or for debugging
     def plotAugmentations(self, X, y):
         fig, axs = plt.subplots(2, 3, figsize=(20, 10))  # Create a subplot with 1 row and 6 columns
-        titleSize = 25
-        subImageTitleSize = 18
+        titleSize = 30
+        subImageTitleSize = 25
         
         # Original Image
         axs[0, 0].imshow(X[0])  # Assuming X[0] is a 2D image
