@@ -37,6 +37,7 @@ class DataAugmentation:
         y = torch.flip(y, [1])  # Flip horizontally
         return X, y
     
+    #! Only works for images with 255 int representation
     def brightness_augmentation(self, X):
         brightness_factor = 1 + torch.empty(1).uniform_(-self.brightness, self.brightness).item()
         # brightness_factor = 0.5
@@ -45,6 +46,7 @@ class DataAugmentation:
         return augmented * 255
         # return X * brightness_factor
     
+    #! Only works for images with 255 int representations
     def contrast_augmentation(self, X):
         contrast_factor = 1 + torch.empty(1).uniform_(-self.contrast, self.contrast).item()
         # contrast_factor = 1.5
