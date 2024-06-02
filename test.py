@@ -29,15 +29,14 @@ def main(config):
     elif config.data.dataset=="11t51center":
         X, y = data_load_tensors(folder_path=folder_path)
     
-        
+    dataAugmentations = None   
     train_loader, test_loader, val_loader = get_dataloaders(X, y, batch_size=config.hyper.batch_size, train_size=config.data.train_size,
                                                 test_size=config.data.test_size, 
                                                 seed=config.constants.seed, sampling_height=config.data.sampling_height, 
                                                 sampling_width=config.data.sampling_width, 
                                                 static_test=config.data.static_test,
                                                 random_train_test_split=config.data.random_train_test_split,
-                                                detector=config.data.detector,
-                                                p_flip_horizontal=config.data.p_flip_horizontal)
+                                                detector=config.data.detector,dataAugmentations=dataAugmentations)
 
     n_channels = 2 if config.data.detector == "both" else 1
     
