@@ -9,14 +9,13 @@ class DataAugmentation:
     def __init__(self, gaussian_kernel_size, gaussian_sigma, brightness, contrast, p_flip_horizontal, sampling_width, sampling_height, random_sampling_train):
         if gaussian_kernel_size:
             self.gaussian_augmentation = v2.GaussianBlur(kernel_size=gaussian_kernel_size, sigma = (0.001, gaussian_sigma))
-            self.gaussian_sigma = gaussian_sigma
-            self.gaussian_kernel_size = gaussian_kernel_size
-        
         else:
             self.gaussian_augmentation = None
     
         self.brightness = brightness
         self.contrast = contrast
+        self.gaussian_sigma = gaussian_sigma
+        self.gaussian_kernel_size = gaussian_kernel_size
         self.p_flip_horizontal = p_flip_horizontal
         self.sampling_width = sampling_width
         self.sampling_height = sampling_height
@@ -77,6 +76,8 @@ class DataAugmentation:
         
         return X, y
     
+    
+    # Only used for a plot in the report or for debugging
     def plotAugmentations(self, X, y):
         fig, axs = plt.subplots(2, 3, figsize=(20, 10))  # Create a subplot with 1 row and 6 columns
         titleSize = 25

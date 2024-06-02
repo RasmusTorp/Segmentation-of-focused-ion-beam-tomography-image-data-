@@ -34,10 +34,9 @@ def main(config):
                                                 test_size=config.data.test_size, 
                                                 seed=config.constants.seed, sampling_height=config.data.sampling_height, 
                                                 sampling_width=config.data.sampling_width, 
-                                                in_memory=config.data.in_memory, 
                                                 static_test=config.data.static_test,
                                                 random_train_test_split=config.data.random_train_test_split,
-                                                detector=config.data.detector, normalize=config.data.normalize,
+                                                detector=config.data.detector,
                                                 p_flip_horizontal=config.data.p_flip_horizontal)
 
     n_channels = 2 if config.data.detector == "both" else 1
