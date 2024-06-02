@@ -20,7 +20,7 @@ def main(config):
                 -n {config.bsub.cpu_num}
                 -R "rusage[mem={config.bsub.cpu_mem}GB]"
                 -R "span[hosts=1]"
-                -W 2:00
+                -W 0:45
                 -B 
                 -N 
                 -o lsf_logs/gpu_%J.out
@@ -40,19 +40,19 @@ def main(config):
                 data.dataset={config.data.dataset}
                 data.train_size={config.data.train_size}
                 data.test_size={config.data.test_size}
-                data.in_memory={config.data.in_memory}
                 data.static_test={config.data.static_test}
                 data.random_train_test_split={config.data.random_train_test_split}
                 data.detector={config.data.detector}
                 
                 
-                dataAug.normalize={config.dataAug.normalize}
                 dataAug.random_sampling_train={config.dataAug.random_sampling_train}
                 dataAug.p_flip_horizontal={config.dataAug.p_flip_horizontal}
                 dataAug.sampling_height={config.dataAug.sampling_height}
                 dataAug.sampling_width={config.dataAug.sampling_width}
                 dataAug.gaussian_kernel_size={config.dataAug.gaussian_kernel_size}
                 dataAug.gaussian_sigma={config.dataAug.gaussian_sigma}
+                dataAug.brightness={config.dataAug.brightness}
+                dataAug.contrast={config.dataAug.contrast}
                 
                 compute.hpc={config.compute.hpc}
                 

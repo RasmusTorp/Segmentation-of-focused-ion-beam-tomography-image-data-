@@ -10,10 +10,7 @@ data:
   dataset: "11t51center"
   train_size: 0.5
   test_size: 0.2
-  in_memory: True
   static_test: True
-  normalize: True
-  p_flip_horizontal: 0.5
   sampling_height: 272
   sampling_width: 448
   random_train_test_split: True
